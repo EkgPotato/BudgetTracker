@@ -17,7 +17,7 @@ namespace Grosik.Data.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.0")
+                .HasAnnotation("ProductVersion", "10.0.2")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -69,7 +69,15 @@ namespace Grosik.Data.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
+                    b.Property<string>("OwnerId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("OwnerId", "Name")
+                        .IsUnique();
 
                     b.ToTable("BudgetSpaces");
                 });
@@ -188,6 +196,9 @@ namespace Grosik.Data.Migrations
                         .IsConcurrencyToken()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("DisplayName")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Email")
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
@@ -211,6 +222,9 @@ namespace Grosik.Data.Migrations
                     b.Property<string>("NormalizedUserName")
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
+
+                    b.Property<bool>("OnboardingCompleted")
+                        .HasColumnType("bit");
 
                     b.Property<string>("PasswordHash")
                         .HasColumnType("nvarchar(max)");
@@ -388,6 +402,17 @@ namespace Grosik.Data.Migrations
                     b.Navigation("BudgetSpace");
                 });
 
+            modelBuilder.Entity("Finance.Api.Domain.BudgetSpace", b =>
+                {
+                    b.HasOne("Finance.Api.Identity.AppUser", "Owner")
+                        .WithMany("BudgetSpaces")
+                        .HasForeignKey("OwnerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Owner");
+                });
+
             modelBuilder.Entity("Finance.Api.Domain.Category", b =>
                 {
                     b.HasOne("Finance.Api.Domain.BudgetSpace", "BudgetSpace")
@@ -484,6 +509,11 @@ namespace Grosik.Data.Migrations
                     b.Navigation("Accounts");
 
                     b.Navigation("Categories");
+                });
+
+            modelBuilder.Entity("Finance.Api.Identity.AppUser", b =>
+                {
+                    b.Navigation("BudgetSpaces");
                 });
 #pragma warning restore 612, 618
         }

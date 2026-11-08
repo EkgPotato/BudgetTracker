@@ -17,6 +17,9 @@ public sealed class FinanceDbContext(DbContextOptions<FinanceDbContext> options)
     {
         base.OnModelCreating(model);
         model.Entity<BudgetSpace>().Property(x => x.Name).HasMaxLength(100);
+        model.Entity<BudgetSpace>().Property(x => x.OwnerId).HasMaxLength(450);
+        model.Entity<BudgetSpace>().HasOne(x => x.Owner).WithMany(x => x.BudgetSpaces).HasForeignKey(x => x.OwnerId).OnDelete(DeleteBehavior.Restrict);
+        model.Entity<BudgetSpace>().HasIndex(x => new { x.OwnerId, x.Name }).IsUnique();
         model.Entity<Account>().Property(x => x.Name).HasMaxLength(100);
         model.Entity<Account>().Property(x => x.Currency).HasMaxLength(3).IsFixedLength();
         model.Entity<Category>().Property(x => x.Name).HasMaxLength(100);

@@ -1,8 +1,12 @@
+using Finance.Api.Identity;
+
 namespace Finance.Api.Domain;
 
 public sealed class BudgetSpace
 {
     public Guid Id { get; set; } = Guid.NewGuid();
+    public required string OwnerId { get; set; }
+    public AppUser? Owner { get; set; }
     public required string Name { get; set; }
     public bool IsActive { get; set; } = true;
     public ICollection<Account> Accounts { get; set; } = new List<Account>();
