@@ -1,0 +1,24 @@
+# .NET
+[Bb]in/
+[Oo]bj/
+TestResults/
+*.user
+*.suo
+
+# Node / Vue
+node_modules/
+dist/
+*.tsbuildinfo
+
+# Local secrets and IDE settings
+.env
+.env.*
+!*.example
+appsettings.Development.json
+.vs/
+.idea/
+
+# Personal financial source data
+*.xlsx
+*.xls
+*.csv

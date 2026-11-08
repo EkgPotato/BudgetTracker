@@ -1,0 +1,9 @@
+<script setup lang="ts">
+import { computed, ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { api, session } from '@/api'
+const isRegister=ref(false), email=ref(''), password=ref(''), confirm=ref(''), error=ref(''), busy=ref(false)
+const router=useRouter(),route=useRoute(); const heading=computed(()=>isRegister.value?'Załóż konto':'Zaloguj się')
+async function submit(){error.value='';if(isRegister.value&&password.value!==confirm.value){error.value='Hasła muszą być identyczne.';return}busy.value=true;try{const result=isRegister.value?await api.register(email.value,password.value):await api.login(email.value,password.value);session.save(result);await router.push(String(route.query.redirect??'/'))}catch(e){error.value=e instanceof Error?e.message:'Nie udało się uwierzytelnić.'}finally{busy.value=false}}
+</script>
+<template><div class="auth-shell"><section class="auth-card"><div class="auth-logo"><span>G</span><b>rosik</b></div><p class="eyebrow">FINANSE DOMOWE</p><h1>{{heading}}</h1><p class="muted">{{isRegister?'Pierwsze konto otrzyma uprawnienia administratora.':'Wprowadź dane dostępu do swojego gospodarstwa.'}}</p><form @submit.prevent="submit"><label>Adres e-mail<input v-model.trim="email" type="email" autocomplete="email" required placeholder="ty@example.com"/></label><label>Hasło<input v-model="password" type="password" autocomplete="current-password" minlength="8" required placeholder="Minimum 8 znaków"/></label><label v-if="isRegister">Powtórz hasło<input v-model="confirm" type="password" autocomplete="new-password" required/></label><p v-if="error" class="notice">{{error}}</p><button class="button primary" :disabled="busy">{{busy?'Chwileczkę…':isRegister?'Utwórz konto':'Zaloguj się'}}</button></form><button class="auth-switch" @click="isRegister=!isRegister;error=''">{{isRegister?'Mam już konto — zaloguj mnie':'Nie mam konta — zarejestruj się'}}</button></section></div></template>

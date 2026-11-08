@@ -1,0 +1,5 @@
+<script setup lang="ts">
+import { onMounted,ref } from 'vue'; import { api } from '@/api'; import type { MonthlyReport } from '@/types'
+const month=ref(new Date().toISOString().slice(0,7)),report=ref<MonthlyReport>(); const money=(v:number)=>new Intl.NumberFormat('pl-PL',{style:'currency',currency:'PLN'}).format(v); async function load(){report.value=await api.report(month.value)} onMounted(load)
+</script>
+<template><section class="panel"><div class="panel-title"><div><h2>Podsumowanie miesiąca</h2><p class="muted">Rzeczywiste przychody i wydatki według kategorii.</p></div><input v-model="month" @change="load" type="month"/></div><table><thead><tr><th>Kategoria</th><th>Rodzaj</th><th>Kwota</th><th>Liczba wpisów</th></tr></thead><tbody><tr v-for="row in report?.categories ?? []" :key="row.categoryId"><td>{{row.category}}</td><td>{{row.kind==='income'?'Przychód':'Wydatek'}}</td><td :class="row.kind==='income'?'positive':'negative'">{{money(row.total)}}</td><td>{{row.count}}</td></tr><tr v-if="!(report?.categories.length)"><td colspan="4" class="empty">Brak danych dla wybranego miesiąca.</td></tr></tbody></table></section></template>

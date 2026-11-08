@@ -1,0 +1,10 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Grosik.Api/Grosik.Api.csproj" />
+    <Project Path="src/Grosik.Data/Grosik.Data.csproj" />
+    <Project Path="src/Grosik.Services/Grosik.Services.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Grosik.Tests/Grosik.Tests.csproj" />
+  </Folder>
+</Solution>
