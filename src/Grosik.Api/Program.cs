@@ -40,6 +40,27 @@ app.MapExcelImportEndpoints();
 
 using (var scope = app.Services.CreateScope())
 {
-    await scope.ServiceProvider.GetRequiredService<FinanceDbContext>().Database.MigrateAsync();
+    var database = scope.ServiceProvider.GetRequiredService<FinanceDbContext>();
+    await MarkEnsureCreatedDatabaseAsBaselineAsync(database);
+    await database.Database.MigrateAsync();
 }
 app.Run();
+
+static async Task MarkEnsureCreatedDatabaseAsBaselineAsync(FinanceDbContext database)
+{
+    // Early local versions used EnsureCreated(), which creates tables but no EF migration history.
+    // Preserve that data by recording the initial migration before normal migrations are applied.
+    if (!await database.Database.CanConnectAsync()) return;
+
+    var initialMigration = database.Database.GetMigrations().FirstOrDefault()
+        ?? throw new InvalidOperationException("Nie znaleziono migracji początkowej.");
+
+    await database.Database.ExecuteSqlRawAsync("IF OBJECT_ID(N'__EFMigrationsHistory', N'U') IS NULL CREATE TABLE [__EFMigrationsHistory] ([MigrationId] nvarchar(150) NOT NULL, [ProductVersion] nvarchar(32) NOT NULL, CONSTRAINT [PK___EFMigrationsHistory] PRIMARY KEY ([MigrationId]));");
+    var requiresBaseline = await database.Database
+        .SqlQuery<int>($"SELECT CAST(CASE WHEN OBJECT_ID(N'AspNetRoles', N'U') IS NOT NULL AND NOT EXISTS (SELECT 1 FROM [__EFMigrationsHistory] WHERE [MigrationId] = {initialMigration}) THEN 1 ELSE 0 END AS int) AS [Value]")
+        .SingleAsync();
+
+    if (requiresBaseline == 0) return;
+
+    await database.Database.ExecuteSqlInterpolatedAsync($"INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion]) VALUES ({initialMigration}, {"10.0.0"});");
+}
