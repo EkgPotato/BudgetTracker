@@ -4,6 +4,7 @@ import { api, apiErrorMessage } from '@/api'
 import { t } from '@/i18n'
 import { formatMoney } from '@/money'
 import { accountTypeLabel, type Account, type AccountType, type BudgetSpace } from '@/types'
+import TransferView from './TransferView.vue'
 
 const accounts = ref<Account[]>([])
 const spaces = ref<BudgetSpace[]>([])
@@ -49,7 +50,7 @@ onMounted(() => { void load() })
 </script>
 
 <template>
-  <div class="grid two wide-first">
+  <div class="accounts-page"><div class="grid two wide-first">
     <section class="panel" aria-live="polite">
       <div class="panel-title"><h2>{{ t('finance.accounts.activeAccounts') }}</h2><span>{{ t('finance.accounts.count', { count: accounts.length }) }}</span></div>
       <p v-if="loading" class="muted">{{ t('finance.accounts.loading') }}</p>
@@ -60,12 +61,14 @@ onMounted(() => { void load() })
     </section>
 
     <section class="panel"><h2>{{ t('finance.accounts.newAccount') }}</h2><form novalidate @submit.prevent="save">
-      <label>{{ t('finance.accounts.name') }}<input v-model.trim="form.name" required :placeholder="t('finance.accounts.namePlaceholder')"></label>
-      <label>{{ t('finance.accounts.budgetSpace') }}<select v-model="form.budgetSpaceId" required><option v-for="space in spaces" :key="space.id" :value="space.id">{{ space.name }}</option></select></label>
-      <label>{{ t('finance.accounts.type') }}<select v-model="form.type"><option value="cash">{{ t('finance.accountTypes.cash') }}</option><option value="bank">{{ t('finance.accountTypes.bank') }}</option><option value="savings">{{ t('finance.accountTypes.savings') }}</option><option value="deposit">{{ t('finance.accountTypes.deposit') }}</option><option value="investment">{{ t('finance.accountTypes.investment') }}</option><option value="liability">{{ t('finance.accountTypes.liability') }}</option></select></label>
-      <label>{{ t('finance.accounts.openingBalance') }}<input v-model.number="form.openingBalance" type="number" step="0.01"></label>
+      <label>{{ t('finance.accounts.name') }}<el-input v-model.trim="form.name" required :placeholder="t('finance.accounts.namePlaceholder')" /></label>
+      <label>{{ t('finance.accounts.budgetSpace') }}<el-select v-model="form.budgetSpaceId" filterable><el-option v-for="space in spaces" :key="space.id" :value="space.id" :label="space.name" /></el-select></label>
+      <label>{{ t('finance.accounts.type') }}<el-select v-model="form.type"><el-option v-for="kind in (['cash', 'bank', 'savings', 'deposit', 'investment', 'liability'] as const)" :key="kind" :value="kind" :label="t(`finance.accountTypes.${kind}`)" /></el-select></label>
+      <label>{{ t('finance.accounts.openingBalance') }}<el-input v-model.number="form.openingBalance" type="number" step="0.01" /></label>
       <p v-if="error" class="notice">{{ error }}</p><p v-if="saved" class="success">{{ saved }}</p>
-      <button class="button primary" :disabled="busy || loading">{{ busy ? t('finance.accounts.saving') : t('finance.accounts.add') }}</button>
+      <el-button type="primary" native-type="submit" :disabled="busy || loading">{{ busy ? t('finance.accounts.saving') : t('finance.accounts.add') }}</el-button>
     </form></section>
-  </div>
+  </div><TransferView :key="accounts.map(account => account.id).join(',')" @transferred="load" /></div>
 </template>
+
+<style scoped>.accounts-page{display:grid;gap:24px}</style>

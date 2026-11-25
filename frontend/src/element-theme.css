@@ -1,0 +1,8 @@
+:root{--el-color-primary:#2450c5;--el-font-family:'DM Sans',sans-serif;--el-border-radius-base:11px}
+button,input,select,textarea{font-family:inherit}
+.el-input__inner,.el-select__input{font-family:inherit;min-height:0;border:0;box-shadow:none;padding:0;background:none}
+.el-select__wrapper,.el-input__wrapper{min-height:44px;border-radius:11px}
+.el-input__inner:focus,.el-select__input:focus{border:0;box-shadow:none;outline:0}
+.header-actions{align-items:center}
+form>.el-button{justify-self:start}
+:root{--el-border-radius-base:7px}.panel,.stats article,.categories-hero,.transaction-hero,.filters-card{border-radius:10px!important}.button,.el-button,.el-select__wrapper,.el-input__wrapper{border-radius:7px!important}

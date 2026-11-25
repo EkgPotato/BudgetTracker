@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { computed, onMounted } from 'vue'
-import { ArrowLeftRight, ChartNoAxesCombined, CreditCard, FolderTree, House, LogOut, Plus, ReceiptText } from '@lucide/vue'
+import { CreditCard, FolderTree, House, LogOut, Plus, ReceiptText } from '@lucide/vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ApiError, api, session } from '@/api'
 import LanguageSelector from '@/components/LanguageSelector.vue'
-import { t } from '@/i18n'
+import { locale, t } from '@/i18n'
+import en from 'element-plus/es/locale/lang/en'
+import pl from 'element-plus/es/locale/lang/pl'
 
 const route = useRoute()
 const router = useRouter()
@@ -14,10 +16,8 @@ const user = computed(() => session.user)
 const links = [
   { to: '/', labelKey: 'nav.overview', icon: House },
   { to: '/transakcje', labelKey: 'nav.transactions', icon: ReceiptText },
-  { to: '/transfery', labelKey: 'nav.transfers', icon: ArrowLeftRight },
   { to: '/konta', labelKey: 'nav.accounts', icon: CreditCard },
   { to: '/kategorie', labelKey: 'nav.categories', icon: FolderTree },
-  { to: '/raporty', labelKey: 'nav.reports', icon: ChartNoAxesCombined },
 ]
 
 function logout(): void { session.clear(); router.push('/auth') }
@@ -37,6 +37,7 @@ onMounted(async () => {
 </script>
 
 <template>
+  <el-config-provider :locale="locale === 'pl' ? pl : en">
   <RouterView v-if="isPublic" />
   <div v-else class="app-shell">
     <aside class="sidebar">
@@ -63,4 +64,5 @@ onMounted(async () => {
       <RouterView />
     </main>
   </div>
+  </el-config-provider>
 </template>

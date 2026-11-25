@@ -4,6 +4,7 @@ import { api, apiErrorMessage } from '@/api'
 import { localDateInputValue } from '@/date'
 import { t } from '@/i18n'
 import type { Account } from '@/types'
+const emit = defineEmits<{ transferred: [] }>()
 
 const accounts = ref<Account[]>([])
 const done = ref('')
@@ -24,7 +25,7 @@ async function save(): Promise<void> {
   if (!form.value.sourceAccountId || !form.value.destinationAccountId) { error.value = t('finance.transfer.missingAccounts'); return }
   if (!Number.isFinite(form.value.amount) || form.value.amount < 0.01) { error.value = t('finance.transfer.invalidAmount'); return }
   busy.value = true
-  try { await api.createTransfer(form.value); done.value = t('finance.transfer.created'); form.value.amount = 0; await load() } catch (caughtError: unknown) { error.value = apiErrorMessage(caughtError, t('finance.transfer.createError')) } finally { busy.value = false }
+  try { await api.createTransfer(form.value); done.value = t('finance.transfer.created'); form.value.amount = 0; await load(); emit('transferred') } catch (caughtError: unknown) { error.value = apiErrorMessage(caughtError, t('finance.transfer.createError')) } finally { busy.value = false }
 }
 
 onMounted(() => { void load().catch(caughtError => { error.value = apiErrorMessage(caughtError, t('finance.transfer.loadError')) }) })
@@ -55,31 +56,27 @@ onMounted(() => { void load().catch(caughtError => { error.value = apiErrorMessa
         <div class="account-pair">
           <label>
             <span>{{ t('finance.transfer.fromAccount') }}</span>
-            <select v-model="form.sourceAccountId" required>
-              <option v-for="account in accounts" :key="account.id" :value="account.id">{{ account.name }}</option>
-            </select>
+            <el-select v-model="form.sourceAccountId" filterable><el-option v-for="account in accounts" :key="account.id" :value="account.id" :label="account.name" /></el-select>
           </label>
           <span class="transfer-arrow" aria-hidden="true">→</span>
           <label>
             <span>{{ t('finance.transfer.toAccount') }}</span>
-            <select v-model="form.destinationAccountId" required>
-              <option v-for="account in accounts" :key="account.id" :value="account.id" :disabled="account.id === form.sourceAccountId">{{ account.name }}</option>
-            </select>
+            <el-select v-model="form.destinationAccountId" filterable><el-option v-for="account in accounts" :key="account.id" :value="account.id" :label="account.name" :disabled="account.id === form.sourceAccountId" /></el-select>
           </label>
         </div>
 
         <div class="transfer-details">
           <label>
             <span>{{ t('finance.transfer.amount') }}</span>
-            <div class="amount-input"><input v-model.number="form.amount" type="number" step="0.01" required><b>{{ t('finance.transfer.currency') }}</b></div>
+            <el-input v-model.number="form.amount" type="number" step="0.01"><template #suffix>{{ t('finance.transfer.currency') }}</template></el-input>
           </label>
-          <label><span>{{ t('finance.transfer.date') }}</span><input v-model="form.occurredOn" type="date" required></label>
+          <label><span>{{ t('finance.transfer.date') }}</span><el-date-picker v-model="form.occurredOn" type="date" value-format="YYYY-MM-DD" /></label>
         </div>
 
-        <label class="description-field"><span>{{ t('finance.transfer.description') }} <em>{{ t('finance.transfer.optional') }}</em></span><input v-model.trim="form.description" :placeholder="t('finance.transfer.descriptionPlaceholder')"></label>
+        <label class="description-field"><span>{{ t('finance.transfer.description') }} <em>{{ t('finance.transfer.optional') }}</em></span><el-input v-model.trim="form.description" :placeholder="t('finance.transfer.descriptionPlaceholder')" /></label>
         <p v-if="error" class="notice">{{ error }}</p>
         <div class="transfer-actions">
-          <button class="button primary transfer-submit" :disabled="busy || accounts.length < 2">{{ busy ? t('finance.transfer.saving') : t('finance.transfer.submit') }}</button>
+          <el-button type="primary" native-type="submit" class="transfer-submit" :disabled="busy || accounts.length < 2">{{ busy ? t('finance.transfer.saving') : t('finance.transfer.submit') }}</el-button>
           <p v-if="done" class="success">{{ done }}</p>
         </div>
       </form>
