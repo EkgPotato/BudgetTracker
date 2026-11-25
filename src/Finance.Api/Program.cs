@@ -66,7 +66,7 @@ builder.Services
         {
             OnTokenValidated = async context =>
             {
-                var userId = context.Principal?.FindFirstValue("sub");
+                var userId = context.Principal?.FindFirstValue(ClaimTypes.NameIdentifier);
                 var securityStamp = context.Principal?.FindFirstValue(ClaimTypes.SerialNumber);
                 if (string.IsNullOrWhiteSpace(userId) || string.IsNullOrWhiteSpace(securityStamp))
                 {

@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import { ArrowLeftRight, ChartNoAxesCombined, CreditCard, FolderTree, House, LogOut, Plus, ReceiptText } from '@lucide/vue'
 import { useRoute, useRouter } from 'vue-router'
-import { session } from '@/api'
+import { ApiError, api, session } from '@/api'
 import LanguageSelector from '@/components/LanguageSelector.vue'
 import { t } from '@/i18n'
 
@@ -21,6 +21,19 @@ const links = [
 ]
 
 function logout(): void { session.clear(); router.push('/auth') }
+
+onMounted(async () => {
+  if (!session.token) return
+
+  try {
+    session.updateUser(await api.me())
+  } catch (error: unknown) {
+    if (error instanceof ApiError && error.status === 401) {
+      session.clear()
+      await router.replace('/auth')
+    }
+  }
+})
 </script>
 
 <template>

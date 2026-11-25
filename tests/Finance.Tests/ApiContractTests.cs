@@ -1,5 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
+using System.Net.Http.Headers;
+using System.Text.Json;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
@@ -66,6 +68,33 @@ public sealed class ApiContractTests : IClassFixture<ApiContractTests.TestApiFac
         });
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Confirmed_user_can_access_protected_endpoint_with_login_token()
+    {
+        var email = $"confirmed-{Guid.NewGuid():N}@example.test";
+        using (var scope = factory.Services.CreateScope())
+        {
+            var users = scope.ServiceProvider.GetRequiredService<UserManager<FinanceUser>>();
+            var result = await users.CreateAsync(new FinanceUser
+            {
+                UserName = email,
+                Email = email,
+                EmailConfirmed = true
+            }, "IntegrationPass123!");
+            Assert.True(result.Succeeded);
+        }
+
+        using var client = factory.CreateClient();
+        var login = await client.PostAsJsonAsync("/api/auth/login", new { email, password = "IntegrationPass123!" });
+        Assert.Equal(HttpStatusCode.OK, login.StatusCode);
+        using var content = JsonDocument.Parse(await login.Content.ReadAsStringAsync());
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", content.RootElement.GetProperty("accessToken").GetString());
+
+        var response = await client.GetAsync("/api/auth/me");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
 
     public sealed class TestApiFactory : WebApplicationFactory<Program>
