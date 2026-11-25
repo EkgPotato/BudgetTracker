@@ -2,6 +2,7 @@ using System.Security.Claims;
 using Finance.Api.Contracts.Finance;
 using Finance.Api.Managers;
 using Finance.Api.Validators;
+using Finance.Localization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -112,7 +113,8 @@ public sealed class FinanceController(IFinanceManager manager, FinanceRequestVal
     public async Task<IActionResult> GetReport([FromQuery] DateOnly? from, [FromQuery] DateOnly? to, CancellationToken token)
     {
         if (OwnerId is null) return Unauthorized();
-        if (from is null || to is null || from > to) return BadRequest("Podaj poprawny zakres dat.");
+        if (from is null || to is null || from > to)
+            return BadRequest(new { message = ValidationMessages.Get("DateRangeInvalid") });
 
         return Ok(await manager.ReportAsync(OwnerId, from.Value, to.Value, token));
     }

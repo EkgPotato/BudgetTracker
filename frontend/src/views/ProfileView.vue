@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onMounted, reactive, ref } from 'vue'
 import { api, apiErrorMessage, session } from '@/api'
+import { t } from '@/i18n'
 
 const profile = reactive({ displayName: '', email: '' })
 const emailForm = reactive({ newEmail: '', currentPassword: '' })
@@ -21,8 +22,8 @@ async function saveProfile(): Promise<void> {
   error.value = ''; status.value = ''; busy.value = 'profile'
   try {
     const user = await api.updateProfile(profile.displayName, Boolean(session.user?.onboardingCompleted))
-    session.updateUser(user); status.value = 'Dane profilu zostały zapisane.'
-  } catch (caught: unknown) { error.value = apiErrorMessage(caught, 'Nie udało się zapisać danych.') } finally { busy.value = null }
+    session.updateUser(user); status.value = t('profile.saved')
+  } catch (caught: unknown) { error.value = apiErrorMessage(caught, t('profile.saveFailed')) } finally { busy.value = null }
 }
 
 async function changeEmail(): Promise<void> {
@@ -30,32 +31,32 @@ async function changeEmail(): Promise<void> {
   try {
     const user = await api.changeEmail(emailForm)
     session.updateUser(user); profile.email = user.email; emailForm.currentPassword = ''
-    status.value = 'Adres został zmieniony. Potwierdź go przez wiadomość e-mail, aby ponownie się zalogować.'
-  } catch (caught: unknown) { error.value = apiErrorMessage(caught, 'Nie udało się zmienić adresu e-mail.') } finally { busy.value = null }
+    status.value = t('profile.emailChanged')
+  } catch (caught: unknown) { error.value = apiErrorMessage(caught, t('profile.emailChangeFailed')) } finally { busy.value = null }
 }
 
 async function changePassword(): Promise<void> {
   error.value = ''; status.value = ''
-  if (passwordForm.newPassword !== passwordForm.confirmation) { error.value = 'Nowe hasła muszą być takie same.'; return }
+  if (passwordForm.newPassword !== passwordForm.confirmation) { error.value = t('profile.passwordMismatch'); return }
   busy.value = 'password'
   try {
     await api.changePassword({ currentPassword: passwordForm.currentPassword, newPassword: passwordForm.newPassword })
     passwordForm.currentPassword = ''; passwordForm.newPassword = ''; passwordForm.confirmation = ''
-    status.value = 'Hasło zostało zmienione.'
-  } catch (caught: unknown) { error.value = apiErrorMessage(caught, 'Nie udało się zmienić hasła.') } finally { busy.value = null }
+    status.value = t('profile.passwordChanged')
+  } catch (caught: unknown) { error.value = apiErrorMessage(caught, t('profile.passwordChangeFailed')) } finally { busy.value = null }
 }
 
-onMounted(() => { void refresh().catch(caught => { error.value = apiErrorMessage(caught, 'Nie udało się pobrać profilu.') }) })
+onMounted(() => { void refresh().catch(caught => { error.value = apiErrorMessage(caught, t('profile.loadFailed')) }) })
 </script>
 
 <template>
   <div class="profile-page">
-    <section class="profile-hero"><p class="section-kicker">KONTO</p><h2>Ustawienia użytkownika</h2><p>Zarządzaj widocznymi danymi i zabezpieczeniami konta.</p></section>
+    <section class="profile-hero"><p class="section-kicker">{{ t('profile.kicker') }}</p><h2>{{ t('profile.title') }}</h2><p>{{ t('profile.description') }}</p></section>
     <p v-if="error" class="notice">{{ error }}</p><p v-if="status" class="success profile-status">{{ status }}</p>
     <div class="profile-grid">
-      <section class="panel"><h2>Twoje dane</h2><p class="muted">Te informacje są widoczne tylko w Twojej aplikacji.</p><form @submit.prevent="saveProfile"><label>Imię i nazwisko<input v-model.trim="profile.displayName" required autocomplete="name"></label><label>Aktualny e-mail<input :value="profile.email" readonly aria-readonly="true"></label><button class="button primary" :disabled="busy !== null">{{ busy === 'profile' ? 'Zapisuję…' : 'Zapisz dane' }}</button></form></section>
-      <section class="panel"><h2>Zmień e-mail</h2><p class="muted">Wymagamy bieżącego hasła i ponownego potwierdzenia nowego adresu.</p><form @submit.prevent="changeEmail"><label>Nowy adres e-mail<input v-model.trim="emailForm.newEmail" type="email" required autocomplete="email"></label><label>Bieżące hasło<input v-model="emailForm.currentPassword" type="password" required autocomplete="current-password"></label><button class="button primary" :disabled="busy !== null">{{ busy === 'email' ? 'Zmieniam…' : 'Zmień e-mail' }}</button></form></section>
-      <section class="panel password-panel"><h2>Zmień hasło</h2><p class="muted">Użyj co najmniej ośmiu znaków i nie udostępniaj hasła nikomu.</p><form @submit.prevent="changePassword"><label>Bieżące hasło<input v-model="passwordForm.currentPassword" type="password" required autocomplete="current-password"></label><label>Nowe hasło<input v-model="passwordForm.newPassword" type="password" minlength="8" required autocomplete="new-password"></label><label>Powtórz nowe hasło<input v-model="passwordForm.confirmation" type="password" minlength="8" required autocomplete="new-password"></label><button class="button primary" :disabled="busy !== null">{{ busy === 'password' ? 'Zmieniam…' : 'Zmień hasło' }}</button></form></section>
+      <section class="panel"><h2>{{ t('profile.detailsTitle') }}</h2><p class="muted">{{ t('profile.detailsDescription') }}</p><form @submit.prevent="saveProfile"><label>{{ t('profile.displayName') }}<input v-model.trim="profile.displayName" required autocomplete="name"></label><label>{{ t('profile.currentEmail') }}<input :value="profile.email" readonly aria-readonly="true"></label><button class="button primary" :disabled="busy !== null">{{ busy === 'profile' ? t('profile.saving') : t('profile.save') }}</button></form></section>
+      <section class="panel"><h2>{{ t('profile.emailTitle') }}</h2><p class="muted">{{ t('profile.emailDescription') }}</p><form @submit.prevent="changeEmail"><label>{{ t('profile.newEmail') }}<input v-model.trim="emailForm.newEmail" type="email" required autocomplete="email"></label><label>{{ t('profile.currentPassword') }}<input v-model="emailForm.currentPassword" type="password" required autocomplete="current-password"></label><button class="button primary" :disabled="busy !== null">{{ busy === 'email' ? t('profile.changing') : t('profile.changeEmail') }}</button></form></section>
+      <section class="panel password-panel"><h2>{{ t('profile.passwordTitle') }}</h2><p class="muted">{{ t('profile.passwordDescription') }}</p><form @submit.prevent="changePassword"><label>{{ t('profile.currentPassword') }}<input v-model="passwordForm.currentPassword" type="password" required autocomplete="current-password"></label><label>{{ t('profile.newPassword') }}<input v-model="passwordForm.newPassword" type="password" minlength="8" required autocomplete="new-password"></label><label>{{ t('profile.confirmNewPassword') }}<input v-model="passwordForm.confirmation" type="password" minlength="8" required autocomplete="new-password"></label><button class="button primary" :disabled="busy !== null">{{ busy === 'password' ? t('profile.changing') : t('profile.changePassword') }}</button></form></section>
     </div>
   </div>
 </template>

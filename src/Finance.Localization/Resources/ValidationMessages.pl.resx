@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms</value></resheader>
+  <data name="EmailRequired" xml:space="preserve"><value>Adres e-mail jest wymagany.</value></data>
+  <data name="EmailInvalid" xml:space="preserve"><value>Podaj prawidłowy adres e-mail.</value></data>
+  <data name="PasswordRequired" xml:space="preserve"><value>Hasło jest wymagane.</value></data>
+  <data name="PasswordTooShort" xml:space="preserve"><value>Hasło musi mieć co najmniej {0} znaków.</value></data>
+  <data name="PasswordRequiresUpper" xml:space="preserve"><value>Hasło musi zawierać co najmniej jedną wielką literę.</value></data>
+  <data name="PasswordRequiresLower" xml:space="preserve"><value>Hasło musi zawierać co najmniej jedną małą literę.</value></data>
+  <data name="PasswordRequiresDigit" xml:space="preserve"><value>Hasło musi zawierać co najmniej jedną cyfrę.</value></data>
+  <data name="PasswordRequiresNonAlphanumeric" xml:space="preserve"><value>Hasło musi zawierać co najmniej jeden znak specjalny.</value></data>
+  <data name="UserIdRequired" xml:space="preserve"><value>Identyfikator użytkownika jest wymagany.</value></data>
+  <data name="TokenRequired" xml:space="preserve"><value>Token jest wymagany.</value></data>
+  <data name="DisplayNameRequired" xml:space="preserve"><value>Podaj nazwę wyświetlaną.</value></data>
+  <data name="BudgetSpaceNameRequired" xml:space="preserve"><value>Podaj nazwę budżetu.</value></data>
+  <data name="AccountNameRequired" xml:space="preserve"><value>Podaj nazwę konta.</value></data>
+  <data name="OpeningBalanceNonNegative" xml:space="preserve"><value>Saldo otwarcia nie może być ujemne.</value></data>
+  <data name="NameRequired" xml:space="preserve"><value>Nazwa jest wymagana.</value></data>
+  <data name="AccountInvalid" xml:space="preserve"><value>Podaj nazwę i nieujemne saldo otwarcia.</value></data>
+  <data name="CategoryInvalid" xml:space="preserve"><value>Podaj nazwę i prawidłowy typ kategorii.</value></data>
+  <data name="TransactionInvalid" xml:space="preserve"><value>Kwota musi być dodatnia, a typ musi oznaczać przychód albo wydatek.</value></data>
+  <data name="TransferInvalid" xml:space="preserve"><value>Wybierz dwa różne konta i podaj dodatnią kwotę.</value></data>
+  <data name="DateRangeInvalid" xml:space="preserve"><value>Podaj poprawny zakres dat.</value></data>
+  <data name="ConfirmationEmailSent" xml:space="preserve"><value>Wysłaliśmy link potwierdzający na podany adres e-mail.</value></data>
+  <data name="EmailConfirmed" xml:space="preserve"><value>Adres e-mail został potwierdzony.</value></data>
+  <data name="ConfirmationLinkInvalid" xml:space="preserve"><value>Link potwierdzający jest nieprawidłowy lub wygasł.</value></data>
+  <data name="ConfirmationEmailResent" xml:space="preserve"><value>Jeśli konto wymaga potwierdzenia, wysłaliśmy nową wiadomość.</value></data>
+  <data name="EmailDeliveryFailed" xml:space="preserve"><value>Nie udało się wysłać wiadomości potwierdzającej. Spróbuj ponownie później.</value></data>
+  <data name="OnboardingAccountRequired" xml:space="preserve"><value>Utwórz pierwsze konto przed zakończeniem konfiguracji.</value></data>
+  <data name="CurrentPasswordInvalid" xml:space="preserve"><value>Bieżące hasło jest nieprawidłowe.</value></data>
+  <data name="EmailUnchanged" xml:space="preserve"><value>To jest już aktualny adres e-mail.</value></data>
+  <data name="EmailAlreadyInUse" xml:space="preserve"><value>Ten adres e-mail jest już używany.</value></data>
+  <data name="EmailChangeFailed" xml:space="preserve"><value>Nie udało się wysłać wiadomości potwierdzającej. Adres e-mail nie został zmieniony.</value></data>
+  <data name="OperationFailed" xml:space="preserve"><value>Nie udało się wykonać operacji. Spróbuj ponownie.</value></data>
+  <data name="DemoPasswordMissing" xml:space="preserve"><value>Skonfiguruj Testing:DemoPassword przed uruchomieniem środowiska testowego.</value></data>
+  <data name="DemoUserCreationFailed" xml:space="preserve"><value>Nie udało się utworzyć użytkownika demonstracyjnego.</value></data>
+  <data name="InvalidToken" xml:space="preserve"><value>Nieprawidłowy token.</value></data>
+  <data name="RevokedToken" xml:space="preserve"><value>Token został unieważniony.</value></data>
+  <data name="SmtpConfigurationInvalid" xml:space="preserve"><value>Skonfiguruj host SMTP oraz adres nadawcy.</value></data>
+  <data name="SmtpTimeoutInvalid" xml:space="preserve"><value>Limit czasu SMTP musi być dodatni.</value></data>
+  <data name="ConfirmationEmailSubject" xml:space="preserve"><value>Potwierdź konto Grosik</value></data>
+  <data name="ConfirmationEmailBody" xml:space="preserve"><value>Potwierdź adres e-mail, otwierając link: {0}</value></data>
+</root>

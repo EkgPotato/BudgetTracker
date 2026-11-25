@@ -41,7 +41,7 @@ public sealed class FinanceDataService(FinanceDbContext database) : IFinanceData
             {
                 Account = account, Amount = request.OpeningBalance.Value, Kind = TransactionKind.OpeningBalance,
                 OccurredOn = request.OpeningBalanceDate ?? DateOnly.FromDateTime(DateTime.Today),
-                Description = "Saldo otwarcia"
+                Description = "Opening balance"
             });
         await database.SaveChangesAsync(token);
         return account;

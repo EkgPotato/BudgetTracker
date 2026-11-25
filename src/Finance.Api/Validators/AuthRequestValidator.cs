@@ -29,7 +29,7 @@ public sealed class AuthRequestValidator
     {
         return string.IsNullOrWhiteSpace(request.Email) ||
                !new System.ComponentModel.DataAnnotations.EmailAddressAttribute().IsValid(request.Email.Trim())
-            ? new Dictionary<string, string[]> { ["email"] = ["Podaj prawidłowy adres e-mail."] }
+            ? new Dictionary<string, string[]> { ["email"] = [ValidationMessages.Get("EmailInvalid")] }
             : new Dictionary<string, string[]>();
     }
 
@@ -46,7 +46,7 @@ public sealed class AuthRequestValidator
         if (string.IsNullOrWhiteSpace(request.NewEmail))
             errors["newEmail"] = [ValidationMessages.Get("EmailRequired")];
         else if (!new System.ComponentModel.DataAnnotations.EmailAddressAttribute().IsValid(request.NewEmail.Trim()))
-            errors["newEmail"] = ["Podaj prawidłowy adres e-mail."];
+            errors["newEmail"] = [ValidationMessages.Get("EmailInvalid")];
         if (string.IsNullOrWhiteSpace(request.CurrentPassword))
             errors["currentPassword"] = [ValidationMessages.Get("PasswordRequired")];
         return errors;
@@ -60,7 +60,7 @@ public sealed class AuthRequestValidator
         if (string.IsNullOrWhiteSpace(request.NewPassword))
             errors["newPassword"] = [ValidationMessages.Get("PasswordRequired")];
         else if (request.NewPassword.Length < 8)
-            errors["newPassword"] = ["Nowe hasło musi mieć co najmniej 8 znaków."];
+            errors["newPassword"] = [ValidationMessages.Format("PasswordTooShort", 8)];
         return errors;
     }
 

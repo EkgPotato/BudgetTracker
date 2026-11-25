@@ -6,6 +6,7 @@ import TransactionFilters from '@/components/transactions/TransactionFilters.vue
 import { api, apiErrorMessage } from '@/api'
 import { useTransactions } from '@/composables/useTransactions'
 import { localDateInputValue } from '@/date'
+import { t } from '@/i18n'
 import { formatMoney } from '@/money'
 import type { TransactionKind } from '@/types'
 
@@ -58,8 +59,8 @@ function closeModal(): void {
 async function save(): Promise<void> {
   error.value = ''
   saved.value = ''
-  if (!form.value.accountId || !form.value.categoryId) { error.value = 'Wybierz konto i kategorię.'; return }
-  if (!Number.isFinite(form.value.amount) || form.value.amount < 0.01) { error.value = 'Kwota musi być większa od 0,00 zł.'; return }
+  if (!form.value.accountId || !form.value.categoryId) { error.value = t('finance.transactions.missingAccountOrCategory'); return }
+  if (!Number.isFinite(form.value.amount) || form.value.amount < 0.01) { error.value = t('finance.transactions.invalidAmount'); return }
 
   busy.value = true
   try {
@@ -67,10 +68,10 @@ async function save(): Promise<void> {
     form.value.amount = 0
     form.value.description = ''
     await loadPage()
-    saved.value = 'Zapisano transakcję.'
+    saved.value = t('finance.transactions.saved')
     closeTimer.value = window.setTimeout(() => { isModalOpen.value = false }, 650)
   } catch (caughtError: unknown) {
-    error.value = apiErrorMessage(caughtError, 'Nie udało się zapisać transakcji.')
+    error.value = apiErrorMessage(caughtError, t('finance.transactions.saveError'))
   } finally {
     busy.value = false
   }
@@ -100,7 +101,7 @@ onMounted(() => {
   applyPreset()
   window.addEventListener('grosik:open-transaction', openModal)
   if (route.query.add === '1') { openModal(); void router.replace('/transakcje') }
-  void loadPage().catch(caughtError => { error.value = apiErrorMessage(caughtError, 'Nie udało się pobrać danych.') })
+  void loadPage().catch(caughtError => { error.value = apiErrorMessage(caughtError, t('finance.transactions.loadError')) })
 })
 
 onBeforeUnmount(() => {
@@ -112,8 +113,8 @@ onBeforeUnmount(() => {
 <template>
   <div class="transactions-page">
     <section class="transaction-hero">
-      <div><p class="section-kicker">PRZEGLĄD PRZEPŁYWÓW</p><h2>Twoje transakcje</h2><p>Filtruj historię i kontroluj, na co przeznaczasz budżet.</p></div>
-      <button class="add-transaction" type="button" @click="openModal">＋ Dodaj transakcję</button>
+      <div><p class="section-kicker">{{ t('finance.transactions.kicker') }}</p><h2>{{ t('finance.transactions.title') }}</h2><p>{{ t('finance.transactions.subtitle') }}</p></div>
+      <button class="add-transaction" type="button" @click="openModal">＋ {{ t('finance.transactions.add') }}</button>
     </section>
 
     <TransactionAnalytics
@@ -137,13 +138,13 @@ onBeforeUnmount(() => {
     />
 
     <section class="panel transaction-list">
-      <div class="panel-head"><div><p class="section-kicker">HISTORIA</p><h3>Lista transakcji</h3></div><span class="count-badge">{{ filteredItems.length }} wpisów</span></div>
+      <div class="panel-head"><div><p class="section-kicker">{{ t('finance.transactions.historyKicker') }}</p><h3>{{ t('finance.transactions.listTitle') }}</h3></div><span class="count-badge">{{ t('finance.transactions.count', { count: filteredItems.length }) }}</span></div>
       <div v-for="transaction in filteredItems" :key="transaction.id" class="transaction-item">
         <span class="transaction-icon" :class="transaction.kind">{{ transaction.kind === 'expense' ? '↙' : '↗' }}</span>
-        <div><strong>{{ transaction.description || transaction.categoryName || 'Bez opisu' }}</strong><small>{{ transaction.categoryName || 'Bez kategorii' }} · {{ transaction.accountName }} · {{ transaction.occurredOn }}</small></div>
+        <div><strong>{{ transaction.description || transaction.categoryName || t('finance.transactions.noDescription') }}</strong><small>{{ transaction.categoryName || t('finance.transactions.noCategory') }} · {{ transaction.accountName }} · {{ transaction.occurredOn }}</small></div>
         <strong :class="transaction.kind === 'expense' ? 'expense' : 'income'">{{ transaction.kind === 'expense' ? '−' : '+' }}{{ formatMoney(transaction.amount) }}</strong>
       </div>
-      <p v-if="!filteredItems.length" class="empty">Brak transakcji dla wybranych filtrów.</p>
+      <p v-if="!filteredItems.length" class="empty">{{ t('finance.transactions.empty') }}</p>
     </section>
   </div>
 
@@ -151,14 +152,14 @@ onBeforeUnmount(() => {
     <Transition name="modal">
       <div v-if="isModalOpen" class="modal-backdrop" @mousedown.self="closeModal">
         <section ref="dialogRef" class="transaction-modal" role="dialog" aria-modal="true" aria-labelledby="transaction-modal-title" @keydown="onDialogKeydown">
-          <header><div><p class="section-kicker">NOWY WPIS</p><h2 id="transaction-modal-title">Dodaj transakcję</h2></div><button data-autofocus class="close-modal" type="button" aria-label="Zamknij" @click="closeModal">×</button></header>
+          <header><div><p class="section-kicker">{{ t('finance.transactions.modalKicker') }}</p><h2 id="transaction-modal-title">{{ t('finance.transactions.modalTitle') }}</h2></div><button data-autofocus class="close-modal" type="button" :aria-label="t('finance.transactions.close')" @click="closeModal">×</button></header>
           <form novalidate @submit.prevent="save">
-            <label>Rodzaj<select v-model="form.kind" @change="form.categoryId = availableCategories[0]?.id || ''"><option value="expense">Wydatek</option><option value="income">Przychód</option></select></label>
-            <div class="modal-two-columns"><label>Konto<select v-model="form.accountId"><option v-for="account in accounts" :key="account.id" :value="account.id">{{ account.name }}</option></select></label><label>Kategoria<select v-model="form.categoryId"><option v-for="category in availableCategories" :key="category.id" :value="category.id">{{ category.parentCategoryId ? '↳ ' : '' }}{{ category.name }}</option></select></label></div>
-            <div class="modal-two-columns"><label>Kwota<input v-model.number="form.amount" step="0.01" type="number" inputmode="decimal" required></label><label>Data<input v-model="form.occurredOn" type="date" required></label></div>
-            <label>Opis<input v-model.trim="form.description" placeholder="np. Zakupy spożywcze"></label>
+            <label>{{ t('finance.transactions.kind') }}<select v-model="form.kind" @change="form.categoryId = availableCategories[0]?.id || ''"><option value="expense">{{ t('finance.transactions.expense') }}</option><option value="income">{{ t('finance.transactions.income') }}</option></select></label>
+            <div class="modal-two-columns"><label>{{ t('finance.transactions.account') }}<select v-model="form.accountId"><option v-for="account in accounts" :key="account.id" :value="account.id">{{ account.name }}</option></select></label><label>{{ t('finance.transactions.category') }}<select v-model="form.categoryId"><option v-for="category in availableCategories" :key="category.id" :value="category.id">{{ category.parentCategoryId ? '↳ ' : '' }}{{ category.name }}</option></select></label></div>
+            <div class="modal-two-columns"><label>{{ t('finance.transactions.amount') }}<input v-model.number="form.amount" step="0.01" type="number" inputmode="decimal" required></label><label>{{ t('finance.transactions.date') }}<input v-model="form.occurredOn" type="date" required></label></div>
+            <label>{{ t('finance.transactions.description') }}<input v-model.trim="form.description" :placeholder="t('finance.transactions.descriptionPlaceholder')"></label>
             <p v-if="error" class="notice">{{ error }}</p><p v-if="saved" class="success">{{ saved }}</p>
-            <footer><button type="button" class="secondary-button" :disabled="busy" @click="closeModal">Anuluj</button><button class="primary-button" :disabled="busy">{{ busy ? 'Zapisuję…' : 'Zapisz transakcję' }}</button></footer>
+            <footer><button type="button" class="secondary-button" :disabled="busy" @click="closeModal">{{ t('finance.transactions.cancel') }}</button><button class="primary-button" :disabled="busy">{{ busy ? t('finance.transactions.saving') : t('finance.transactions.save') }}</button></footer>
           </form>
         </section>
       </div>

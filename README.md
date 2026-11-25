@@ -1,62 +1,113 @@
-# Grosik — finanse domowe
+# Grosik
 
-Grosik to lokalna aplikacja do prowadzenia budżetu prywatnego i domowego. Nazwa **Grosik** jest marką widoczną dla użytkownika; kod aplikacji używa przestrzeni nazw `Finance.*`.
+Grosik is a personal and household budgeting application. **Grosik** is the user-facing product name; the backend code uses the `Finance.*` namespace family.
 
-## Architektura
+## Architecture
 
-- `src/Finance.Domain` — encje, enumy i reguły domenowe bez zależności od EF Core lub ASP.NET Core;
-- `src/Finance.Infrastructure` — EF Core, Identity, mapowanie modelu i pojedyncza migracja inicjalna;
-- `src/Finance.Api` — kontrolery MVC, kontrakty HTTP, walidatory, managerowie i serwisy bazy danych;
-- `src/Finance.Localization` — komunikaty walidacji i inne zasoby `.resx`;
-- `frontend` — Vue 3;
-- `tests/Finance.Tests` — testy jednostkowe.
+- `src/Finance.Domain` — domain entities, enums, and business rules with no EF Core or ASP.NET Core dependencies.
+- `src/Finance.Infrastructure` — EF Core persistence, ASP.NET Core Identity, model configuration, and database migrations.
+- `src/Finance.Api` — HTTP contracts, MVC controllers, validators, managers, and application services.
+- `src/Finance.Localization` — localized API response and validation-message resources.
+- `frontend` — Vue 3 single-page application.
+- `tests/Finance.Tests` — automated unit and integration tests.
 
-API używa klasycznych kontrolerów. Kontrolery obsługują protokół HTTP, walidatory sprawdzają wejście, managerowie mapują/orchestrują przypadki użycia, a serwisy wykonują operacje bazodanowe.
+Controllers handle HTTP concerns, validators check request input, managers coordinate use cases and response mapping, and services perform persistence operations.
 
-## Wymagania
+## Prerequisites
 
-- .NET SDK 10;
-- Node.js 24+;
-- Docker Desktop (zalecany dla SQL Servera i Mailpit).
+- .NET SDK 10
+- Node.js 24 or later
+- Docker Desktop, recommended for SQL Server and Mailpit
 
-## Uruchomienie lokalne (Debug HTTPS)
+## Local development
 
-1. Utwórz lokalne sekrety API — nie zapisuj ich w plikach wersjonowanych:
-
-   ```powershell
-   dotnet user-secrets set "ConnectionStrings:FinanceDb" "Server=localhost,1433;Database=Finance;User Id=sa;Password=<twoje-haslo>;TrustServerCertificate=True;Encrypt=False" --project src/Finance.Api
-   dotnet user-secrets set "Jwt:Key" "<losowy-klucz-majacy-co-najmniej-32-znaki>" --project src/Finance.Api
-   ```
-
-2. Skopiuj `.env.example` do `.env`, ustaw te same wartości haseł i uruchom zależności: `docker compose up -d sqlserver mailpit`.
-3. Zaufaj certyfikatowi deweloperskiemu: `dotnet dev-certs https --trust`.
-4. Uruchom profil **Debug (HTTPS)** dla `src/Finance.Api` (adres `https://localhost:7180`) i `npm run dev` w `frontend`.
-
-## Uruchomienie w Dockerze
-
-1. Skopiuj `.env.example` do `.env` i zastąp wszystkie wartości przykładowe unikalnymi sekretami.
-2. Uruchom `docker compose up --build`.
-3. Frontend będzie dostępny pod `http://localhost:5173`, API pod `http://localhost:5180`, a Mailpit pod `http://localhost:8025`.
-
-Do lokalnego HTTPS API w Dockerze wygeneruj certyfikat i uruchom override opisany w `docker-compose.https.yml`.
-
-## Tryb testowy (InMemory)
-
-Tryb testowy nie wymaga SQL Servera ani Mailpit. Przy każdym uruchomieniu tworzy pustą bazę in-memory i zasiewa ją przykładowym budżetem, kontami, kategoriami oraz transakcjami z bieżącego miesiąca.
-
-1. W bieżącej sesji ustaw dwa lokalne sekrety:
+1. Configure local API secrets. Do not commit them to source control:
 
    ```powershell
-   $env:Jwt__Key = "<losowy-klucz-majacy-co-najmniej-32-znaki>"
-   $env:Testing__DemoPassword = "<unikalne-haslo-testowe>"
+   dotnet user-secrets set "ConnectionStrings:FinanceDb" "Server=localhost,1433;Database=Finance;User Id=sa;Password=<your-password>;TrustServerCertificate=True;Encrypt=False" --project src/Finance.Api
+   dotnet user-secrets set "Jwt:Key" "<a-random-secret-with-at-least-32-characters>" --project src/Finance.Api
    ```
 
-2. Uruchom API: `dotnet run --project src/Finance.Api --launch-profile "Test Mode (InMemory)"`.
-3. W drugim terminalu uruchom frontend: `npm run dev --prefix frontend`.
-4. Zaloguj się jako `demo@grosik.test`, używając wartości `Testing__DemoPassword`.
+2. Copy `.env.example` to `.env`, set the corresponding local values, and start the dependencies:
 
-Tryb jest aktywny wyłącznie dla środowiska `Testing`; pozostałe środowiska nadal wymagają połączenia SQL Server skonfigurowanego przez `ConnectionStrings:FinanceDb`.
+   ```powershell
+   docker compose up -d sqlserver mailpit
+   ```
 
-## Baza danych
+3. Trust the development certificate:
 
-Baza jest inicjalizowana jedną migracją EF Core w `src/Finance.Infrastructure/Data/Migrations`. Migracje uruchamiaj kontrolowanym krokiem wdrożenia, np. `dotnet ef database update --project src/Finance.Infrastructure --startup-project src/Finance.Api`; API nie wykonuje ich automatycznie podczas startu.
+   ```powershell
+   dotnet dev-certs https --trust
+   ```
+
+4. Start the API with the **Debug (HTTPS)** profile (`https://localhost:7180`) and start the frontend:
+
+   ```powershell
+   npm run dev --prefix frontend
+   ```
+
+## Docker
+
+1. Copy `.env.example` to `.env` and replace every placeholder with a unique secret.
+2. Start the application:
+
+   ```powershell
+   docker compose up --build
+   ```
+
+The frontend is available at `http://localhost:5173`, the API at `http://localhost:5180`, and Mailpit at `http://localhost:8025`.
+
+For HTTPS in Docker, generate a development certificate and use the configuration in `docker-compose.https.yml`.
+
+## Test mode (in-memory database)
+
+Test mode does not require SQL Server or Mailpit. Each application start creates a fresh in-memory database and seeds a demo budget, accounts, categories, and transactions for the current month.
+
+1. Set the required local values in the current PowerShell session:
+
+   ```powershell
+   $env:Jwt__Key = "a-random-secret-with-at-least-32-characters"
+   $env:Testing__DemoPassword = "DemoPassword123"
+   ```
+
+2. Start the API:
+
+   ```powershell
+   dotnet run --project src/Finance.Api --launch-profile "Test Mode (InMemory)"
+   ```
+
+3. In a second terminal, start the frontend:
+
+   ```powershell
+   npm run dev --prefix frontend
+   ```
+
+4. Sign in with `demo@grosik.test` and the value configured in `Testing__DemoPassword`.
+
+Test mode is enabled only when `ASPNETCORE_ENVIRONMENT` is `Testing`. All other environments require `ConnectionStrings:FinanceDb` to be configured.
+
+## Localization
+
+The API defaults to English and supports Polish. Validation and response messages use the request culture selected in this order:
+
+1. `?culture=en` or `?culture=pl`
+2. The standard ASP.NET Core culture cookie
+3. The `Accept-Language` request header
+
+Frontend requests should send the selected language as `Accept-Language` so API validation and response messages match the user interface. Localized texts are maintained in `src/Finance.Localization/Resources`.
+
+## Database migrations
+
+The database is initialized by the migration in `src/Finance.Infrastructure/Data/Migrations`. Apply migrations as a controlled deployment step; the API does not apply migrations when it starts:
+
+```powershell
+dotnet ef database update --project src/Finance.Infrastructure --startup-project src/Finance.Api
+```
+
+## Verification
+
+Run the backend test suite with:
+
+```powershell
+dotnet test tests/Finance.Tests/Finance.Tests.csproj
+```

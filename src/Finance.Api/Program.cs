@@ -2,6 +2,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Security.Claims;
+using System.Globalization;
 using Finance.Api.Configuration;
 using Finance.Api.Features;
 using Finance.Api.Managers;
@@ -9,8 +10,10 @@ using Finance.Api.Services;
 using Finance.Api.Validators;
 using Finance.Infrastructure.Data;
 using Finance.Infrastructure.Identity;
+using Finance.Localization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Localization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 
@@ -33,7 +36,7 @@ else
 builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection("Jwt"));
 builder.Services.Configure<MailpitOptions>(builder.Configuration.GetSection("Mailpit"));
 var jwt = builder.Configuration.GetSection("Jwt").Get<JwtOptions>() ??
-          throw new InvalidOperationException("Brak konfiguracji Jwt.");
+          throw new InvalidOperationException("Configure the Jwt section.");
 if (string.IsNullOrWhiteSpace(jwt.Key) || jwt.Key.Length < 32)
     throw new InvalidOperationException("Configure Jwt:Key with a secret of at least 32 characters.");
 builder.Services.AddIdentityCore<FinanceUser>(options =>
@@ -67,18 +70,19 @@ builder.Services
                 var securityStamp = context.Principal?.FindFirstValue(ClaimTypes.SerialNumber);
                 if (string.IsNullOrWhiteSpace(userId) || string.IsNullOrWhiteSpace(securityStamp))
                 {
-                    context.Fail("Nieprawidłowy token.");
+                    context.Fail(ValidationMessages.Get("InvalidToken"));
                     return;
                 }
 
                 var users = context.HttpContext.RequestServices.GetRequiredService<UserManager<FinanceUser>>();
                 var user = await users.FindByIdAsync(userId);
                 if (user is null || !string.Equals(user.SecurityStamp, securityStamp, StringComparison.Ordinal))
-                    context.Fail("Token został unieważniony.");
+                    context.Fail(ValidationMessages.Get("RevokedToken"));
             }
         };
     });
 builder.Services.AddAuthorization();
+builder.Services.AddLocalization();
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
         options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase)));
@@ -99,6 +103,20 @@ builder.Services.AddCors(options =>
             .AllowAnyMethod()));
 
 var app = builder.Build();
+var supportedCultures = new[] { new CultureInfo("en"), new CultureInfo("pl") };
+var localizationOptions = new RequestLocalizationOptions
+{
+    DefaultRequestCulture = new RequestCulture("en"),
+    SupportedCultures = supportedCultures,
+    SupportedUICultures = supportedCultures,
+    RequestCultureProviders =
+    [
+        new QueryStringRequestCultureProvider(),
+        new CookieRequestCultureProvider(),
+        new AcceptLanguageHeaderRequestCultureProvider()
+    ]
+};
+app.UseRequestLocalization(localizationOptions);
 if (app.Environment.IsEnvironment("Testing"))
     await TestDataSeeder.SeedAsync(app.Services, app.Configuration);
 app.UseCors();

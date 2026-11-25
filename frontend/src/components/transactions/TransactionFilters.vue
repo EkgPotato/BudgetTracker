@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { DateRangePreset } from '@/dateRange'
 import type { TransactionFilters } from '@/composables/useTransactions'
+import { t } from '@/i18n'
 import type { Account, Category } from '@/types'
 
 defineProps<{
@@ -23,31 +24,31 @@ function updatePreset(event: Event): void {
 </script>
 
 <template>
-  <section class="filters-card" aria-label="Filtry transakcji">
+  <section class="filters-card" :aria-label="t('finance.transactions.filtersLabel')">
     <div class="filter-heading">
-      <div><p class="section-kicker">FILTRY</p><h3>Znajdź właściwe wpisy</h3></div>
-      <button type="button" class="text-button" @click="emit('clear')">Wyczyść filtry</button>
+      <div><p class="section-kicker">{{ t('finance.transactions.filtersKicker') }}</p><h3>{{ t('finance.transactions.filtersTitle') }}</h3></div>
+      <button type="button" class="text-button" @click="emit('clear')">{{ t('finance.transactions.clearFilters') }}</button>
     </div>
     <div class="filters-grid">
-      <label>Zakres dat
+      <label>{{ t('finance.transactions.dateRange') }}
         <select :value="datePreset" @change="updatePreset">
-          <option value="day">Dzień</option><option value="month">Miesiąc</option><option value="year">Rok</option><option value="custom">Własny przedział</option>
+          <option value="day">{{ t('finance.transactions.day') }}</option><option value="month">{{ t('finance.transactions.month') }}</option><option value="year">{{ t('finance.transactions.year') }}</option><option value="custom">{{ t('finance.transactions.custom') }}</option>
         </select>
       </label>
-      <label>Od<input v-model="filters.from" :disabled="datePreset !== 'custom'" type="date"></label>
-      <label>Do<input v-model="filters.to" :disabled="datePreset !== 'custom'" type="date"></label>
-      <label>Rodzaje
-        <select v-model="filters.kinds" multiple size="3" aria-label="Rodzaje transakcji">
-          <option value="expense">Wydatki</option><option value="income">Przychody</option>
+      <label>{{ t('finance.transactions.from') }}<input v-model="filters.from" :disabled="datePreset !== 'custom'" type="date"></label>
+      <label>{{ t('finance.transactions.to') }}<input v-model="filters.to" :disabled="datePreset !== 'custom'" type="date"></label>
+      <label>{{ t('finance.transactions.kinds') }}
+        <select v-model="filters.kinds" multiple size="3" :aria-label="t('finance.transactions.kindsAria')">
+          <option value="expense">{{ t('finance.transactions.expense') }}</option><option value="income">{{ t('finance.transactions.income') }}</option>
         </select>
       </label>
-      <label>Konta
-        <select v-model="filters.accountIds" multiple size="3" aria-label="Konta">
+      <label>{{ t('finance.transactions.accounts') }}
+        <select v-model="filters.accountIds" multiple size="3" :aria-label="t('finance.transactions.accountsAria')">
           <option v-for="account in accounts" :key="account.id" :value="account.id">{{ account.name }}</option>
         </select>
       </label>
-      <label class="category-filter">Kategorie
-        <select v-model="filters.categoryIds" multiple size="5" aria-label="Kategorie">
+      <label class="category-filter">{{ t('finance.transactions.categories') }}
+        <select v-model="filters.categoryIds" multiple size="5" :aria-label="t('finance.transactions.categoriesAria')">
           <option v-for="category in categories" :key="category.id" :value="category.id">{{ category.parentCategoryId ? '↳ ' : '' }}{{ category.name }}</option>
         </select>
       </label>

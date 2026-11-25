@@ -4,17 +4,43 @@
   <resheader name="version"><value>2.0</value></resheader>
   <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms</value></resheader>
   <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms</value></resheader>
-  <data name="EmailRequired" xml:space="preserve"><value>E-mail jest wymagany.</value></data>
-  <data name="PasswordRequired" xml:space="preserve"><value>Hasło jest wymagane.</value></data>
-  <data name="UserIdRequired" xml:space="preserve"><value>Id użytkownika jest wymagane.</value></data>
-  <data name="TokenRequired" xml:space="preserve"><value>Token jest wymagany.</value></data>
-  <data name="DisplayNameRequired" xml:space="preserve"><value>Podaj nazwę wyświetlaną.</value></data>
-  <data name="BudgetSpaceNameRequired" xml:space="preserve"><value>Podaj nazwę portfela.</value></data>
-  <data name="AccountNameRequired" xml:space="preserve"><value>Podaj nazwę konta.</value></data>
-  <data name="OpeningBalanceNonNegative" xml:space="preserve"><value>Saldo otwarcia nie może być ujemne.</value></data>
-  <data name="NameRequired" xml:space="preserve"><value>Nazwa jest wymagana.</value></data>
-  <data name="AccountInvalid" xml:space="preserve"><value>Podaj nazwę i nieujemne saldo.</value></data>
-  <data name="CategoryInvalid" xml:space="preserve"><value>Podaj nazwę i prawidłowy typ kategorii.</value></data>
-  <data name="TransactionInvalid" xml:space="preserve"><value>Kwota musi być dodatnia, a typ przychodem albo wydatkiem.</value></data>
-  <data name="TransferInvalid" xml:space="preserve"><value>Wybierz różne konta i dodatnią kwotę.</value></data>
+  <data name="EmailRequired" xml:space="preserve"><value>Email is required.</value></data>
+  <data name="EmailInvalid" xml:space="preserve"><value>Enter a valid email address.</value></data>
+  <data name="PasswordRequired" xml:space="preserve"><value>Password is required.</value></data>
+  <data name="PasswordTooShort" xml:space="preserve"><value>Password must be at least {0} characters.</value></data>
+  <data name="PasswordRequiresUpper" xml:space="preserve"><value>Password must contain at least one uppercase letter.</value></data>
+  <data name="PasswordRequiresLower" xml:space="preserve"><value>Password must contain at least one lowercase letter.</value></data>
+  <data name="PasswordRequiresDigit" xml:space="preserve"><value>Password must contain at least one digit.</value></data>
+  <data name="PasswordRequiresNonAlphanumeric" xml:space="preserve"><value>Password must contain at least one special character.</value></data>
+  <data name="UserIdRequired" xml:space="preserve"><value>User ID is required.</value></data>
+  <data name="TokenRequired" xml:space="preserve"><value>Token is required.</value></data>
+  <data name="DisplayNameRequired" xml:space="preserve"><value>Enter a display name.</value></data>
+  <data name="BudgetSpaceNameRequired" xml:space="preserve"><value>Enter a budget space name.</value></data>
+  <data name="AccountNameRequired" xml:space="preserve"><value>Enter an account name.</value></data>
+  <data name="OpeningBalanceNonNegative" xml:space="preserve"><value>Opening balance cannot be negative.</value></data>
+  <data name="NameRequired" xml:space="preserve"><value>Name is required.</value></data>
+  <data name="AccountInvalid" xml:space="preserve"><value>Enter a name and a non-negative opening balance.</value></data>
+  <data name="CategoryInvalid" xml:space="preserve"><value>Enter a name and a valid category type.</value></data>
+  <data name="TransactionInvalid" xml:space="preserve"><value>Amount must be positive and the type must be income or expense.</value></data>
+  <data name="TransferInvalid" xml:space="preserve"><value>Select two different accounts and enter a positive amount.</value></data>
+  <data name="DateRangeInvalid" xml:space="preserve"><value>Enter a valid date range.</value></data>
+  <data name="ConfirmationEmailSent" xml:space="preserve"><value>We sent a confirmation link to the provided email address.</value></data>
+  <data name="EmailConfirmed" xml:space="preserve"><value>Email address confirmed.</value></data>
+  <data name="ConfirmationLinkInvalid" xml:space="preserve"><value>The confirmation link is invalid or has expired.</value></data>
+  <data name="ConfirmationEmailResent" xml:space="preserve"><value>If the account requires confirmation, we sent a new message.</value></data>
+  <data name="EmailDeliveryFailed" xml:space="preserve"><value>We could not send the confirmation email. Please try again later.</value></data>
+  <data name="OnboardingAccountRequired" xml:space="preserve"><value>Create your first account before completing setup.</value></data>
+  <data name="CurrentPasswordInvalid" xml:space="preserve"><value>The current password is incorrect.</value></data>
+  <data name="EmailUnchanged" xml:space="preserve"><value>This is already your current email address.</value></data>
+  <data name="EmailAlreadyInUse" xml:space="preserve"><value>This email address is already in use.</value></data>
+  <data name="EmailChangeFailed" xml:space="preserve"><value>We could not send a confirmation email. Your email address was not changed.</value></data>
+  <data name="OperationFailed" xml:space="preserve"><value>The operation could not be completed. Please try again.</value></data>
+  <data name="DemoPasswordMissing" xml:space="preserve"><value>Configure Testing:DemoPassword before starting the testing environment.</value></data>
+  <data name="DemoUserCreationFailed" xml:space="preserve"><value>Unable to create the demo user.</value></data>
+  <data name="InvalidToken" xml:space="preserve"><value>Invalid token.</value></data>
+  <data name="RevokedToken" xml:space="preserve"><value>Token has been revoked.</value></data>
+  <data name="SmtpConfigurationInvalid" xml:space="preserve"><value>Configure the SMTP host and sender address.</value></data>
+  <data name="SmtpTimeoutInvalid" xml:space="preserve"><value>SMTP timeout must be positive.</value></data>
+  <data name="ConfirmationEmailSubject" xml:space="preserve"><value>Confirm your Grosik account</value></data>
+  <data name="ConfirmationEmailBody" xml:space="preserve"><value>Confirm your email address by opening this link: {0}</value></data>
 </root>

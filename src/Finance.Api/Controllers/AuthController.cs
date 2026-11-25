@@ -1,6 +1,8 @@
 using Finance.Api.Contracts.Auth;
 using Finance.Api.Managers;
 using Finance.Api.Validators;
+using Finance.Api.Features;
+using Finance.Localization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -18,11 +20,9 @@ public sealed class AuthController(IAuthManager manager, AuthRequestValidator va
         if (errors.Count > 0) return ValidationProblem(new ValidationProblemDetails(errors));
         var result = await manager.RegisterAsync(request, cancellationToken);
         return result.Succeeded
-            ? Accepted(new { message = "Wysłaliśmy link potwierdzający na podany adres e-mail." })
+            ? Accepted(new { message = ValidationMessages.Get("ConfirmationEmailSent") })
             : ValidationProblem(new ValidationProblemDetails(
-                result.Errors.GroupBy(error => error.Code).ToDictionary(
-                    group => group.Key,
-                    group => group.Select(error => error.Description).ToArray())));
+                IdentityErrorLocalizer.ToValidationErrors(result.Errors)));
     }
 
     [AllowAnonymous]
@@ -32,8 +32,8 @@ public sealed class AuthController(IAuthManager manager, AuthRequestValidator va
         var errors = validator.Validate(request);
         if (errors.Count > 0) return ValidationProblem(new ValidationProblemDetails(errors));
         return await manager.ConfirmEmailAsync(request)
-            ? Ok(new { message = "Adres e-mail został potwierdzony." })
-            : BadRequest(new { message = "Link jest nieprawidłowy lub wygasł." });
+            ? Ok(new { message = ValidationMessages.Get("EmailConfirmed") })
+            : BadRequest(new { message = ValidationMessages.Get("ConfirmationLinkInvalid") });
     }
 
     [AllowAnonymous]
@@ -44,7 +44,7 @@ public sealed class AuthController(IAuthManager manager, AuthRequestValidator va
         var errors = validator.Validate(request);
         if (errors.Count > 0) return ValidationProblem(new ValidationProblemDetails(errors));
         await manager.ResendConfirmationAsync(request, cancellationToken);
-        return Accepted(new { message = "Jeśli konto wymaga potwierdzenia, wysłaliśmy nową wiadomość." });
+        return Accepted(new { message = ValidationMessages.Get("ConfirmationEmailResent") });
     }
 
     [AllowAnonymous]
@@ -114,9 +114,7 @@ public sealed class AuthController(IAuthManager manager, AuthRequestValidator va
         return result.Succeeded
             ? NoContent()
             : ValidationProblem(new ValidationProblemDetails(
-                result.Errors.GroupBy(error => error.Code).ToDictionary(
-                    group => group.Key,
-                    group => group.Select(error => error.Description).ToArray())));
+                IdentityErrorLocalizer.ToValidationErrors(result.Errors)));
     }
 
     [Authorize]

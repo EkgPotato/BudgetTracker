@@ -2,6 +2,7 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { api, apiErrorMessage } from '@/api'
 import { dateRangeForPreset, type DateRangePreset } from '@/dateRange'
+import { t } from '@/i18n'
 import { formatCents, formatMoney, toCents } from '@/money'
 import type { DateRangeReport } from '@/types'
 
@@ -10,7 +11,7 @@ const from = ref('')
 const to = ref('')
 const report = ref<DateRangeReport>()
 const error = ref('')
-const title = computed(() => ({ day: 'Podsumowanie dnia', month: 'Podsumowanie miesiąca', year: 'Podsumowanie roku', custom: 'Podsumowanie zakresu' }[preset.value]))
+const title = computed(() => t(`finance.reports.title${preset.value[0].toUpperCase()}${preset.value.slice(1)}`))
 const balanceCents = computed(() => toCents(report.value?.income ?? 0) - toCents(report.value?.expenses ?? 0))
 function applyPreset(): void {
   if (preset.value === 'custom') return
@@ -18,17 +19,17 @@ function applyPreset(): void {
   from.value = range.from
   to.value = range.to
 }
-async function load(): Promise<void> { error.value = ''; if (!from.value || !to.value || from.value > to.value) { error.value = 'Wybierz poprawny zakres dat.'; return } try { report.value = await api.reportRange(from.value, to.value) } catch (caught: unknown) { error.value = apiErrorMessage(caught, 'Nie udało się pobrać raportu.') } }
+async function load(): Promise<void> { error.value = ''; if (!from.value || !to.value || from.value > to.value) { error.value = t('finance.reports.invalidRange'); return } try { report.value = await api.reportRange(from.value, to.value) } catch (caught: unknown) { error.value = apiErrorMessage(caught, t('finance.reports.loadError')) } }
 watch(preset, () => { if (preset.value !== 'custom') applyPreset(); void load() })
 onMounted(() => { applyPreset(); void load() })
 </script>
 
 <template>
   <div class="reports-page">
-    <section class="report-hero"><div><p class="section-kicker">ANALITYKA</p><h2>{{ title }}</h2><p>Przychody i wydatki według kategorii dla wybranego okresu.</p></div><div class="range-controls"><label>Zakres<select v-model="preset"><option value="day">Dzień</option><option value="month">Miesiąc</option><option value="year">Rok</option><option value="custom">Własny przedział</option></select></label><label>Od<input v-model="from" :disabled="preset !== 'custom'" type="date" @change="load"></label><label>Do<input v-model="to" :disabled="preset !== 'custom'" type="date" @change="load"></label><button v-if="preset === 'custom'" class="button primary" type="button" @click="load">Zastosuj</button></div></section>
+    <section class="report-hero"><div><p class="section-kicker">{{ t('finance.reports.kicker') }}</p><h2>{{ title }}</h2><p>{{ t('finance.reports.subtitle') }}</p></div><div class="range-controls"><label>{{ t('finance.reports.range') }}<select v-model="preset"><option value="day">{{ t('finance.reports.day') }}</option><option value="month">{{ t('finance.reports.month') }}</option><option value="year">{{ t('finance.reports.year') }}</option><option value="custom">{{ t('finance.reports.custom') }}</option></select></label><label>{{ t('finance.reports.from') }}<input v-model="from" :disabled="preset !== 'custom'" type="date" @change="load"></label><label>{{ t('finance.reports.to') }}<input v-model="to" :disabled="preset !== 'custom'" type="date" @change="load"></label><button v-if="preset === 'custom'" class="button primary" type="button" @click="load">{{ t('finance.reports.apply') }}</button></div></section>
     <p v-if="error" class="notice">{{ error }}</p>
-    <section class="report-totals"><article><span>Przychody</span><strong class="positive">{{ formatMoney(report?.income ?? 0) }}</strong></article><article><span>Wydatki</span><strong class="negative">{{ formatMoney(report?.expenses ?? 0) }}</strong></article><article><span>Bilans</span><strong :class="balanceCents >= 0 ? 'positive' : 'negative'">{{ formatCents(balanceCents) }}</strong></article></section>
-    <section class="panel"><div class="panel-title"><div><h2>Kategorie</h2><p class="muted">{{ report?.from }} — {{ report?.to }}</p></div></div><table class="report-table"><thead><tr><th>Kategoria</th><th>Rodzaj</th><th>Kwota</th><th>Liczba wpisów</th></tr></thead><tbody><tr v-for="row in report?.categories ?? []" :key="`${row.kind}-${row.categoryId}`"><td data-label="Kategoria">{{ row.category }}</td><td data-label="Rodzaj">{{ row.kind === 'income' ? 'Przychód' : 'Wydatek' }}</td><td data-label="Kwota" :class="row.kind === 'income' ? 'positive' : 'negative'">{{ formatMoney(row.total) }}</td><td data-label="Liczba wpisów">{{ row.count }}</td></tr><tr v-if="!(report?.categories.length)"><td colspan="4" class="empty">Brak danych dla wybranego zakresu.</td></tr></tbody></table></section>
+    <section class="report-totals"><article><span>{{ t('finance.reports.income') }}</span><strong class="positive">{{ formatMoney(report?.income ?? 0) }}</strong></article><article><span>{{ t('finance.reports.expenses') }}</span><strong class="negative">{{ formatMoney(report?.expenses ?? 0) }}</strong></article><article><span>{{ t('finance.reports.balance') }}</span><strong :class="balanceCents >= 0 ? 'positive' : 'negative'">{{ formatCents(balanceCents) }}</strong></article></section>
+    <section class="panel"><div class="panel-title"><div><h2>{{ t('finance.reports.categories') }}</h2><p class="muted">{{ report?.from }} — {{ report?.to }}</p></div></div><table class="report-table"><thead><tr><th>{{ t('finance.reports.category') }}</th><th>{{ t('finance.reports.kind') }}</th><th>{{ t('finance.reports.amount') }}</th><th>{{ t('finance.reports.entryCount') }}</th></tr></thead><tbody><tr v-for="row in report?.categories ?? []" :key="`${row.kind}-${row.categoryId}`"><td :data-label="t('finance.reports.category')">{{ row.category }}</td><td :data-label="t('finance.reports.kind')">{{ row.kind === 'income' ? t('finance.reports.income') : t('finance.categories.expense') }}</td><td :data-label="t('finance.reports.amount')" :class="row.kind === 'income' ? 'positive' : 'negative'">{{ formatMoney(row.total) }}</td><td :data-label="t('finance.reports.entryCount')">{{ row.count }}</td></tr><tr v-if="!(report?.categories.length)"><td colspan="4" class="empty">{{ t('finance.reports.empty') }}</td></tr></tbody></table></section>
   </div>
 </template>
 

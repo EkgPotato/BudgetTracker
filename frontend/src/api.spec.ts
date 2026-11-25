@@ -31,6 +31,18 @@ describe('session persistence', () => {
     expect(session.user).toBeNull()
   })
 
+  it('sends the selected locale with API requests', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('{}', { status: 200 })))
+    const { setLocale } = await import('./i18n')
+    const { api } = await import('./api')
+
+    setLocale('pl')
+    await api.dashboard()
+
+    const [, options] = vi.mocked(fetch).mock.calls[0]
+    expect((options?.headers as Headers).get('Accept-Language')).toBe('pl')
+  })
+
   it('stores a validated authenticated user', async () => {
     const { session } = await import('./api')
     session.save({ accessToken: 'token', user: { id: '1', email: 'user@example.test', isAdmin: false } })

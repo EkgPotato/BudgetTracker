@@ -1,4 +1,4 @@
-const moneyFormatter = new Intl.NumberFormat('pl-PL', { style: 'currency', currency: 'PLN' })
+import { formatMoney as formatLocalizedMoney } from '@/i18n'
 
 export function toCents(value: number): number {
   return Math.round(value * 100)
@@ -9,7 +9,7 @@ export function fromCents(value: number): number {
 }
 
 export function formatMoney(value: number): string {
-  return moneyFormatter.format(value)
+  return formatLocalizedMoney(value)
 }
 
 export function formatCents(value: number): string {

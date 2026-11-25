@@ -1,16 +1,10 @@
+import { t } from '@/i18n'
+
 export type TransactionKind = 'income' | 'expense'
 export type AccountType = 'cash' | 'bank' | 'savings' | 'deposit' | 'investment' | 'liability'
 
 export function accountTypeLabel(type: AccountType): string {
-  const labels: Record<AccountType, string> = {
-    cash: 'Gotówkowe',
-    bank: 'Bankowe',
-    savings: 'Oszczędnościowe',
-    deposit: 'Lokata',
-    investment: 'Inwestycyjne',
-    liability: 'Zobowiązanie',
-  }
-  return labels[type]
+  return t(`finance.accountTypes.${type}`)
 }
 export interface BudgetSpace { id: string; name: string; isActive: boolean }
 export interface Account { id: string; budgetSpaceId: string; budgetSpaceName?: string; name: string; type: AccountType; currency: string; balance: number; isActive: boolean }

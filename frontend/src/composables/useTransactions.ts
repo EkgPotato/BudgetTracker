@@ -1,6 +1,7 @@
 import { computed, ref, type ComputedRef, type Ref } from 'vue'
 import { api } from '@/api'
 import { dateRangeForPreset, type DateRangePreset } from '@/dateRange'
+import { t } from '@/i18n'
 import { toCents } from '@/money'
 import type { Account, Category, Transaction, TransactionKind } from '@/types'
 
@@ -61,7 +62,7 @@ export function useTransactions(): UseTransactionsReturn {
     const totals = new Map<string, TransactionCategoryTotal>()
     for (const item of filteredItems.value.filter(entry => entry.kind === 'expense')) {
       const key = item.categoryId ?? 'other'
-      const current = totals.get(key) ?? { name: item.categoryName || 'Bez kategorii', cents: 0 }
+      const current = totals.get(key) ?? { name: item.categoryName || t('finance.transactions.noCategory'), cents: 0 }
       current.cents += toCents(item.amount)
       totals.set(key, current)
     }

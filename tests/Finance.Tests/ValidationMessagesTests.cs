@@ -1,3 +1,4 @@
+using System.Globalization;
 using Finance.Localization;
 using Xunit;
 
@@ -5,11 +6,23 @@ namespace Finance.Tests;
 
 public sealed class ValidationMessagesTests
 {
-    [Fact]
-    public void Get_ReturnsPolishValidationMessage()
+    [Theory]
+    [InlineData("en", "Email is required.")]
+    [InlineData("pl", "Adres e-mail jest wymagany.")]
+    public void Get_UsesCurrentUiCulture(string cultureName, string expectedMessage)
     {
-        var message = ValidationMessages.Get("EmailRequired");
+        var originalCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = CultureInfo.GetCultureInfo(cultureName);
 
-        Assert.Equal("E-mail jest wymagany.", message);
+            var message = ValidationMessages.Get("EmailRequired");
+
+            Assert.Equal(expectedMessage, message);
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = originalCulture;
+        }
     }
 }

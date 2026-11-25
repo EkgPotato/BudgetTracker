@@ -13,15 +13,15 @@ import { session } from './api'
 export const router = createRouter({
   history: createWebHistory(),
   routes: [
-    { path: '/auth', component: AuthView, meta: { public: true, title: 'Witaj w Grosik' } },
-    { path: '/onboarding', component: OnboardingView, meta: { public: true, onboarding: true, title: 'Pierwsza konfiguracja' } },
-    { path: '/', component: DashboardView, meta: { title: 'Przegląd' } },
-    { path: '/transakcje', component: TransactionsView, meta: { title: 'Transakcje' } },
-    { path: '/transfery', component: TransferView, meta: { title: 'Transfer środków' } },
-    { path: '/konta', component: AccountsView, meta: { title: 'Konta' } },
-    { path: '/kategorie', component: CategoriesView, meta: { title: 'Kategorie' } },
-    { path: '/raporty', component: ReportsView, meta: { title: 'Raporty' } },
-    { path: '/profil', component: ProfileView, meta: { title: 'Mój profil' } }
+    { path: '/auth', component: AuthView, meta: { public: true, titleKey: 'route.auth' } },
+    { path: '/onboarding', component: OnboardingView, meta: { public: true, onboarding: true, titleKey: 'route.onboarding' } },
+    { path: '/', component: DashboardView, meta: { titleKey: 'nav.overview' } },
+    { path: '/transakcje', component: TransactionsView, meta: { titleKey: 'nav.transactions' } },
+    { path: '/transfery', component: TransferView, meta: { titleKey: 'nav.transfers' } },
+    { path: '/konta', component: AccountsView, meta: { titleKey: 'nav.accounts' } },
+    { path: '/kategorie', component: CategoriesView, meta: { titleKey: 'nav.categories' } },
+    { path: '/raporty', component: ReportsView, meta: { titleKey: 'nav.reports' } },
+    { path: '/profil', component: ProfileView, meta: { titleKey: 'nav.profile' } }
   ]
 })
 router.beforeEach((to) => {

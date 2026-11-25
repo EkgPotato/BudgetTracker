@@ -7,6 +7,7 @@ using Finance.Api.Features;
 using Finance.Api.Services;
 using Finance.Infrastructure.Data;
 using Finance.Infrastructure.Identity;
+using Finance.Localization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.EntityFrameworkCore;
@@ -47,12 +48,12 @@ public sealed class AuthManager(
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
-            logger.LogError(exception, "Nie udało się wysłać potwierdzenia rejestracji dla użytkownika {UserId}.", user!.Id);
+            logger.LogError(exception, "Failed to send registration confirmation for user {UserId}.", user!.Id);
             await users.DeleteAsync(user);
             return IdentityResult.Failed(new IdentityError
             {
                 Code = "EmailDeliveryFailed",
-                Description = "Nie udało się wysłać wiadomości potwierdzającej. Spróbuj ponownie później."
+                Description = "Confirmation email delivery failed."
             });
         }
         return result;
@@ -85,7 +86,7 @@ public sealed class AuthManager(
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
-            logger.LogWarning(exception, "Nie udało się wysłać ponownego potwierdzenia dla użytkownika {UserId}.", user.Id);
+            logger.LogWarning(exception, "Failed to resend confirmation for user {UserId}.", user.Id);
         }
     }
 
@@ -114,14 +115,13 @@ public sealed class AuthManager(
 
         if (request.OnboardingCompleted &&
             !await database.Accounts.AnyAsync(account => account.BudgetSpace!.OwnerId == user.Id, cancellationToken))
-            throw new InvalidOperationException("Utwórz pierwsze konto przed zakończeniem konfiguracji.");
+            throw new InvalidOperationException(ValidationMessages.Get("OnboardingAccountRequired"));
 
         user.DisplayName = request.DisplayName!.Trim();
         user.OnboardingCompleted = request.OnboardingCompleted;
         var updateResult = await users.UpdateAsync(user);
         if (!updateResult.Succeeded)
-            throw new InvalidOperationException(
-                string.Join(" ", updateResult.Errors.Select(error => error.Description)));
+            throw new InvalidOperationException(ValidationMessages.Get("OperationFailed"));
         return ToResponse(user);
     }
 
@@ -133,14 +133,14 @@ public sealed class AuthManager(
         var user = await users.GetUserAsync(principal);
         if (user is null) return null;
         if (!await users.CheckPasswordAsync(user, request.CurrentPassword!))
-            throw new InvalidOperationException("Bieżące hasło jest nieprawidłowe.");
+            throw new InvalidOperationException(ValidationMessages.Get("CurrentPasswordInvalid"));
 
         var email = request.NewEmail!.Trim();
         if (string.Equals(user.Email, email, StringComparison.OrdinalIgnoreCase))
-            throw new InvalidOperationException("To jest już aktualny adres e-mail.");
+            throw new InvalidOperationException(ValidationMessages.Get("EmailUnchanged"));
         var existingUser = await users.FindByEmailAsync(email);
         if (existingUser is not null && existingUser.Id != user.Id)
-            throw new InvalidOperationException("Ten adres e-mail jest już używany.");
+            throw new InvalidOperationException(ValidationMessages.Get("EmailAlreadyInUse"));
 
         var previousEmail = user.Email!;
         var previousUserName = user.UserName!;
@@ -157,8 +157,8 @@ public sealed class AuthManager(
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
             await RestoreEmailAsync(user, previousEmail, previousUserName, wasEmailConfirmed);
-            logger.LogWarning(exception, "Nie udało się zmienić adresu e-mail dla użytkownika {UserId}.", user.Id);
-            throw new InvalidOperationException("Nie udało się wysłać wiadomości potwierdzającej. Adres e-mail nie został zmieniony.");
+            logger.LogWarning(exception, "Failed to change email address for user {UserId}.", user.Id);
+            throw new InvalidOperationException(ValidationMessages.Get("EmailChangeFailed"));
         }
         return ToResponse(user);
     }
@@ -182,8 +182,7 @@ public sealed class AuthManager(
         await onboardingService.CompleteAsync(user, request, cancellationToken);
         var updateResult = await users.UpdateAsync(user);
         if (!updateResult.Succeeded)
-            throw new InvalidOperationException(
-                string.Join(" ", updateResult.Errors.Select(error => error.Description)));
+            throw new InvalidOperationException(ValidationMessages.Get("OperationFailed"));
         return ToResponse(user);
     }
 
@@ -231,6 +230,6 @@ public sealed class AuthManager(
     private static void EnsureSuccess(IdentityResult result)
     {
         if (!result.Succeeded)
-            throw new InvalidOperationException(string.Join(" ", result.Errors.Select(error => error.Description)));
+            throw new InvalidOperationException(ValidationMessages.Get("OperationFailed"));
     }
 }

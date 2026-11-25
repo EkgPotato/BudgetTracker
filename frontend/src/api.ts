@@ -1,4 +1,5 @@
 import { ref } from 'vue'
+import { locale, t } from './i18n'
 import type { Account, AccountType, BudgetSpace, Category, Dashboard, DateRangeReport, MonthlyReport, Transaction, TransactionKind } from './types'
 
 const apiBaseUrl = '/api'
@@ -43,7 +44,7 @@ export class ApiError extends Error { constructor(public readonly status: number
 
 async function responseMessage(response: Response): Promise<string> {
   const body = await response.text()
-  if (!body) return 'Operacja nie powiodła się.'
+  if (!body) return t('auth.operationFailed')
   try { const problem: unknown = JSON.parse(body); const title = typeof problem === 'object' && problem !== null ? (problem as Record<string, unknown>).title : null; if (typeof title === 'string') return title } catch { /* plain text is a supported fallback */ }
   return body
 }
@@ -52,6 +53,7 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   const headers = new Headers(init.headers)
   if (!(init.body instanceof FormData)) headers.set('Content-Type', 'application/json')
   if (session.token) headers.set('Authorization', `Bearer ${session.token}`)
+  headers.set('Accept-Language', locale.value)
   const response = await fetch(`${apiBaseUrl}${path}`, { ...init, headers })
   if (!response.ok) { if (response.status === 401 || response.status === 403) session.clear(); throw new ApiError(response.status, await responseMessage(response)) }
   return response.status === 204 ? undefined as T : response.json() as Promise<T>

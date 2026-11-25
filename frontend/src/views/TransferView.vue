@@ -2,6 +2,7 @@
 import { onMounted, ref } from 'vue'
 import { api, apiErrorMessage } from '@/api'
 import { localDateInputValue } from '@/date'
+import { t } from '@/i18n'
 import type { Account } from '@/types'
 
 const accounts = ref<Account[]>([])
@@ -19,33 +20,33 @@ async function load(): Promise<void> {
 async function save(): Promise<void> {
   error.value = ''
   done.value = ''
-  if (form.value.sourceAccountId === form.value.destinationAccountId) { error.value = 'Wybierz dwa różne konta.'; return }
-  if (!form.value.sourceAccountId || !form.value.destinationAccountId) { error.value = 'Wybierz konto źródłowe i docelowe.'; return }
-  if (!Number.isFinite(form.value.amount) || form.value.amount < 0.01) { error.value = 'Kwota musi być większa od 0,00 zł.'; return }
+  if (form.value.sourceAccountId === form.value.destinationAccountId) { error.value = t('finance.transfer.sameAccounts'); return }
+  if (!form.value.sourceAccountId || !form.value.destinationAccountId) { error.value = t('finance.transfer.missingAccounts'); return }
+  if (!Number.isFinite(form.value.amount) || form.value.amount < 0.01) { error.value = t('finance.transfer.invalidAmount'); return }
   busy.value = true
-  try { await api.createTransfer(form.value); done.value = 'Transfer został zapisany.'; form.value.amount = 0; await load() } catch (caughtError: unknown) { error.value = apiErrorMessage(caughtError, 'Nie udało się wykonać transferu.') } finally { busy.value = false }
+  try { await api.createTransfer(form.value); done.value = t('finance.transfer.created'); form.value.amount = 0; await load() } catch (caughtError: unknown) { error.value = apiErrorMessage(caughtError, t('finance.transfer.createError')) } finally { busy.value = false }
 }
 
-onMounted(() => { void load().catch(caughtError => { error.value = apiErrorMessage(caughtError, 'Nie udało się pobrać kont.') }) })
+onMounted(() => { void load().catch(caughtError => { error.value = apiErrorMessage(caughtError, t('finance.transfer.loadError')) }) })
 </script>
 
 <template>
   <section class="transfer-layout">
     <aside class="transfer-intro">
-      <span class="transfer-kicker">PRZESUŃ ŚRODKI</span>
-      <h2>Transfer między kontami</h2>
-      <p>Przenieś środki bez wpływu na przychody i wydatki w raportach.</p>
+      <span class="transfer-kicker">{{ t('finance.transfer.kicker') }}</span>
+      <h2>{{ t('finance.transfer.title') }}</h2>
+      <p>{{ t('finance.transfer.subtitle') }}</p>
       <div class="transfer-note">
         <span aria-hidden="true">↔</span>
-        <p>Saldo źródłowego konta zmniejszy się, a docelowego — zwiększy o tę samą kwotę.</p>
+        <p>{{ t('finance.transfer.note') }}</p>
       </div>
     </aside>
 
     <section class="transfer-card" aria-labelledby="transfer-form-title">
       <div class="transfer-card-header">
         <div>
-          <span class="section-eyebrow">NOWY TRANSFER</span>
-          <h2 id="transfer-form-title">Dokąd wysyłasz środki?</h2>
+          <span class="section-eyebrow">{{ t('finance.transfer.formKicker') }}</span>
+          <h2 id="transfer-form-title">{{ t('finance.transfer.formTitle') }}</h2>
         </div>
         <span class="transfer-mark" aria-hidden="true">⇄</span>
       </div>
@@ -53,14 +54,14 @@ onMounted(() => { void load().catch(caughtError => { error.value = apiErrorMessa
       <form novalidate @submit.prevent="save">
         <div class="account-pair">
           <label>
-            <span>Z konta</span>
+            <span>{{ t('finance.transfer.fromAccount') }}</span>
             <select v-model="form.sourceAccountId" required>
               <option v-for="account in accounts" :key="account.id" :value="account.id">{{ account.name }}</option>
             </select>
           </label>
           <span class="transfer-arrow" aria-hidden="true">→</span>
           <label>
-            <span>Na konto</span>
+            <span>{{ t('finance.transfer.toAccount') }}</span>
             <select v-model="form.destinationAccountId" required>
               <option v-for="account in accounts" :key="account.id" :value="account.id" :disabled="account.id === form.sourceAccountId">{{ account.name }}</option>
             </select>
@@ -69,16 +70,16 @@ onMounted(() => { void load().catch(caughtError => { error.value = apiErrorMessa
 
         <div class="transfer-details">
           <label>
-            <span>Kwota</span>
-            <div class="amount-input"><input v-model.number="form.amount" type="number" step="0.01" required><b>zł</b></div>
+            <span>{{ t('finance.transfer.amount') }}</span>
+            <div class="amount-input"><input v-model.number="form.amount" type="number" step="0.01" required><b>{{ t('finance.transfer.currency') }}</b></div>
           </label>
-          <label><span>Data przelewu</span><input v-model="form.occurredOn" type="date" required></label>
+          <label><span>{{ t('finance.transfer.date') }}</span><input v-model="form.occurredOn" type="date" required></label>
         </div>
 
-        <label class="description-field"><span>Tytuł przelewu <em>opcjonalnie</em></span><input v-model.trim="form.description" placeholder="np. Zasilenie oszczędności"></label>
+        <label class="description-field"><span>{{ t('finance.transfer.description') }} <em>{{ t('finance.transfer.optional') }}</em></span><input v-model.trim="form.description" :placeholder="t('finance.transfer.descriptionPlaceholder')"></label>
         <p v-if="error" class="notice">{{ error }}</p>
         <div class="transfer-actions">
-          <button class="button primary transfer-submit" :disabled="busy || accounts.length < 2">{{ busy ? 'Zapisuję…' : 'Wykonaj transfer' }}</button>
+          <button class="button primary transfer-submit" :disabled="busy || accounts.length < 2">{{ busy ? t('finance.transfer.saving') : t('finance.transfer.submit') }}</button>
           <p v-if="done" class="success">{{ done }}</p>
         </div>
       </form>

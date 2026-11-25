@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { formatCents } from '@/money'
+import { t } from '@/i18n'
 import type { TransactionCategoryTotal } from '@/composables/useTransactions'
 import type { Transaction } from '@/types'
 
@@ -15,14 +16,14 @@ defineProps<{
 </script>
 
 <template>
-  <section class="transaction-summary" aria-label="Podsumowanie transakcji">
-    <article><span>Przychody</span><strong class="income">{{ formatCents(incomeCents) }}</strong><small>dla wybranych filtrów</small></article>
-    <article><span>Wydatki</span><strong class="expense">{{ formatCents(expenseCents) }}</strong><small>dla wybranych filtrów</small></article>
-    <article><span>Bilans</span><strong :class="balanceCents >= 0 ? 'income' : 'expense'">{{ formatCents(balanceCents) }}</strong><small>{{ items.length }} wpisów</small></article>
+  <section class="transaction-summary" :aria-label="t('finance.transactions.summaryLabel')">
+    <article><span>{{ t('finance.transactions.income') }}</span><strong class="income">{{ formatCents(incomeCents) }}</strong><small>{{ t('finance.transactions.selectedFilters') }}</small></article>
+    <article><span>{{ t('finance.transactions.expense') }}</span><strong class="expense">{{ formatCents(expenseCents) }}</strong><small>{{ t('finance.transactions.selectedFilters') }}</small></article>
+    <article><span>{{ t('finance.reports.balance') }}</span><strong :class="balanceCents >= 0 ? 'income' : 'expense'">{{ formatCents(balanceCents) }}</strong><small>{{ t('finance.transactions.count', { count: items.length }) }}</small></article>
   </section>
   <section class="analytics-grid">
-    <article class="panel category-chart"><div class="panel-head"><div><p class="section-kicker">ANALITYKA</p><h3>Największe kategorie wydatków</h3></div><span class="chart-icon">◔</span></div><div v-if="categoryBreakdown.length" class="category-bars"><div v-for="entry in categoryBreakdown" :key="entry.name" class="bar-row"><div class="bar-label"><span>{{ entry.name }}</span><strong>{{ formatCents(entry.cents) }}</strong></div><div class="bar-track"><i :style="{ width: `${(entry.cents / maxCategoryCents) * 100}%` }"></i></div></div></div><p v-else class="empty">Brak wydatków dla wybranych filtrów.</p></article>
-    <article class="panel category-guide"><p class="section-kicker">KONTEKST</p><h3>Kategorie w filtrze</h3><p>Wybierz kategorię, aby szybko porównać ją z pozostałymi wpisami w danym miesiącu.</p><div class="category-chips"><span v-for="category in categories.slice(0, 6)" :key="category.id">{{ category.name }}</span></div></article>
+    <article class="panel category-chart"><div class="panel-head"><div><p class="section-kicker">{{ t('finance.transactions.analyticsKicker') }}</p><h3>{{ t('finance.transactions.largestExpenseCategories') }}</h3></div><span class="chart-icon">◔</span></div><div v-if="categoryBreakdown.length" class="category-bars"><div v-for="entry in categoryBreakdown" :key="entry.name" class="bar-row"><div class="bar-label"><span>{{ entry.name }}</span><strong>{{ formatCents(entry.cents) }}</strong></div><div class="bar-track"><i :style="{ width: `${(entry.cents / maxCategoryCents) * 100}%` }"></i></div></div></div><p v-else class="empty">{{ t('finance.transactions.noExpenses') }}</p></article>
+    <article class="panel category-guide"><p class="section-kicker">{{ t('finance.transactions.contextKicker') }}</p><h3>{{ t('finance.transactions.categoriesInFilter') }}</h3><p>{{ t('finance.transactions.categoriesHint') }}</p><div class="category-chips"><span v-for="category in categories.slice(0, 6)" :key="category.id">{{ category.name }}</span></div></article>
   </section>
 </template>
 

@@ -41,7 +41,7 @@ public sealed class OnboardingService(FinanceDbContext database) : IOnboardingSe
                     Amount = request.OpeningBalance,
                     Kind = TransactionKind.OpeningBalance,
                     OccurredOn = DateOnly.FromDateTime(DateTime.Today),
-                    Description = "Saldo otwarcia"
+                    Description = "Opening balance"
                 });
         }
 
