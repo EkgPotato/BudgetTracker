@@ -1,5 +1,8 @@
 export const coreMessages = {
   en: {
+    'nav.collapse': 'Collapse navigation', 'nav.expand': 'Expand navigation',
+    'theme.dark': 'Switch to dark mode', 'theme.light': 'Switch to light mode',
+    'validation.required': 'This field is required.', 'validation.email': 'Enter a valid email address.', 'validation.tooShort': 'Enter at least {min} characters.', 'validation.invalid': 'Check this value.',
     'language.label': 'Language', 'language.english': 'English', 'language.polish': 'Polski',
     'nav.finance': 'FINANCE', 'nav.overview': 'Overview', 'nav.transactions': 'Transactions', 'nav.transfers': 'Transfers', 'nav.accounts': 'Accounts', 'nav.categories': 'Categories', 'nav.reports': 'Reports', 'nav.profile': 'My profile',
     'app.brandHome': 'Grosik — go to overview', 'app.mainNavigation': 'Main navigation', 'app.openProfile': 'Open my profile', 'app.defaultUser': 'User', 'app.logout': 'Log out', 'app.addExpense': 'Add transaction',
@@ -9,6 +12,9 @@ export const coreMessages = {
     'route.auth': 'Welcome to Grosik', 'route.onboarding': 'Initial setup'
   },
   pl: {
+    'nav.collapse': 'Zwiń nawigację', 'nav.expand': 'Rozwiń nawigację',
+    'theme.dark': 'Włącz tryb ciemny', 'theme.light': 'Włącz tryb jasny',
+    'validation.required': 'To pole jest wymagane.', 'validation.email': 'Wpisz poprawny adres e-mail.', 'validation.tooShort': 'Wpisz co najmniej {min} znaków.', 'validation.invalid': 'Sprawdź poprawność tej wartości.',
     'language.label': 'Język', 'language.english': 'English', 'language.polish': 'Polski',
     'nav.finance': 'FINANSE', 'nav.overview': 'Przegląd', 'nav.transactions': 'Transakcje', 'nav.transfers': 'Przelewy', 'nav.accounts': 'Konta', 'nav.categories': 'Kategorie', 'nav.reports': 'Raporty', 'nav.profile': 'Mój profil',
     'app.brandHome': 'Grosik — przejdź do przeglądu', 'app.mainNavigation': 'Główna nawigacja', 'app.openProfile': 'Otwórz mój profil', 'app.defaultUser': 'Użytkownik', 'app.logout': 'Wyloguj', 'app.addExpense': 'Dodaj transakcję',

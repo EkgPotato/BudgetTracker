@@ -1,0 +1,29 @@
+.field-error{display:block;color:#bf3941;font-size:12px;font-weight:600;line-height:1.4;margin-top:2px}
+input[aria-invalid="true"]{border-color:#df6570!important}
+.el-input:has(input[aria-invalid="true"]) .el-input__wrapper{box-shadow:0 0 0 1px #df6570 inset}
+.notice{border:1px solid #f1bdc1;border-radius:8px;background:#fff1f2;color:#a52b37;font-size:13px;line-height:1.5}
+html.dark{color-scheme:dark;--el-color-primary:#7fa5ff;--el-bg-color:#19283c;--el-bg-color-overlay:#202f44;--el-fill-color-blank:#1b2b40;--el-fill-color-light:#283a51;--el-text-color-primary:#e5edf9;--el-text-color-regular:#c2d0e3;--el-text-color-secondary:#9caec5;--el-border-color:#40526b;--el-border-color-light:#34465e}
+html.dark,html.dark body,html.dark .app-shell{background:#0c1728;color:#e5edf9}
+html.dark .sidebar{background:linear-gradient(180deg,#0a1525,#101e32)}
+html.dark .panel,html.dark .stats article,html.dark .auth-card,html.dark .onboarding-card,html.dark .filters-card,html.dark .categories-hero,html.dark .transaction-hero,html.dark .report-hero{background:#19283c;color:#e5edf9;border-color:#34465e;box-shadow:0 8px 24px #0003}
+html.dark .app-header h1,html.dark h1,html.dark h2,html.dark h3,html.dark .category-main strong,html.dark .filter-heading h3,html.dark .categories-hero h2,html.dark .transaction-hero h2,html.dark .panel h3{color:#e5edf9}
+html.dark label,html.dark .filters-grid label,html.dark .auth-card label,html.dark .bar-label strong{color:#bfcee2}
+html.dark .muted,html.dark .hint,html.dark .empty,html.dark .stats small,html.dark .stats span,html.dark .account-row small,html.dark .transaction-row small{color:#a9bbd2}
+html.dark .category-group{border-color:#34465e}html.dark .category-main{background:#22344b}html.dark .category-group li{background:#2a3e58;color:#dce7f6}
+html.dark .account-row,html.dark .transaction-row,html.dark th,html.dark td{border-color:#34465e}
+html.dark .overview-track,html.dark .bar-track{background:#34465e}
+html.dark input:not(.el-input__inner):not(.el-select__input),html.dark select,html.dark textarea{background-color:#1b2b40;color:#e5edf9;border-color:#40526b}
+html.dark .notice{background:#4a252c;border-color:#9b4b56;color:#ffd9dc}html.dark .field-error{color:#ff9da6}html.dark .success{color:#81d9b3}
+html.dark .auth-shell,html.dark .onboarding-shell{background:radial-gradient(circle at 20% 20%,#1d3c67,#081526 68%)}
+html.dark .el-table,html.dark .el-table tr,html.dark .el-table th.el-table__cell,html.dark .el-table td.el-table__cell{background-color:var(--el-bg-color);color:var(--el-text-color-primary)}
+html.dark .transfer-card{background:#19283c;border-color:#40536d;box-shadow:0 12px 30px #0004}
+html.dark .transfer-intro h2,html.dark .transfer-card h2{color:#eff5ff}
+html.dark .transfer-intro>p{color:#bccce2}
+html.dark .transfer-note{background:#263b56;color:#d6e4f7}
+html.dark .transfer-note span,html.dark .transfer-arrow{background:#344d6d;color:#b6ccff}
+html.dark .transfer-card-header{border-color:#40536d}
+html.dark .account-pair label,html.dark .transfer-details label,html.dark .description-field{color:#d8e3f3}
+html.dark .sidebar{background:linear-gradient(180deg,#142b49,#192f4c);border-right:1px solid #40536d;box-shadow:6px 0 22px #0003}
+html.dark .category-main{background:#2d4463;border-bottom:1px solid #4a617e}
+html.dark .category-main strong{color:#f2f6ff}html.dark .category-main small,html.dark .category-main>span{color:#bfd0e8}
+html.dark .auth-card{background:#233953;border:1px solid #526c8e;box-shadow:0 24px 60px #030c1caa,0 0 0 1px #ffffff0a}

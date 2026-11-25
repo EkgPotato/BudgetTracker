@@ -45,7 +45,18 @@ export class ApiError extends Error { constructor(public readonly status: number
 async function responseMessage(response: Response): Promise<string> {
   const body = await response.text()
   if (!body) return t('auth.operationFailed')
-  try { const problem: unknown = JSON.parse(body); const title = typeof problem === 'object' && problem !== null ? (problem as Record<string, unknown>).title : null; if (typeof title === 'string') return title } catch { /* plain text is a supported fallback */ }
+  try {
+    const problem: unknown = JSON.parse(body)
+    if (typeof problem === 'object' && problem !== null) {
+      const data = problem as Record<string, unknown>
+      if (typeof data.errors === 'object' && data.errors !== null) {
+        const messages = Object.values(data.errors).flatMap(value => Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string') : [])
+        if (messages.length) return messages.join(' ')
+      }
+      if (typeof data.message === 'string') return data.message
+      if (typeof data.title === 'string') return data.title
+    }
+  } catch { /* plain text is a supported fallback */ }
   return body
 }
 
