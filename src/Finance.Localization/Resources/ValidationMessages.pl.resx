@@ -14,15 +14,15 @@
   <data name="PasswordRequiresNonAlphanumeric" xml:space="preserve"><value>Hasło musi zawierać co najmniej jeden znak specjalny.</value></data>
   <data name="UserIdRequired" xml:space="preserve"><value>Identyfikator użytkownika jest wymagany.</value></data>
   <data name="TokenRequired" xml:space="preserve"><value>Token jest wymagany.</value></data>
-  <data name="DisplayNameRequired" xml:space="preserve"><value>Podaj nazwę wyświetlaną.</value></data>
-  <data name="BudgetSpaceNameRequired" xml:space="preserve"><value>Podaj nazwę budżetu.</value></data>
-  <data name="AccountNameRequired" xml:space="preserve"><value>Podaj nazwę konta.</value></data>
-  <data name="OpeningBalanceNonNegative" xml:space="preserve"><value>Saldo otwarcia nie może być ujemne.</value></data>
-  <data name="NameRequired" xml:space="preserve"><value>Nazwa jest wymagana.</value></data>
-  <data name="AccountInvalid" xml:space="preserve"><value>Podaj nazwę i nieujemne saldo otwarcia.</value></data>
-  <data name="CategoryInvalid" xml:space="preserve"><value>Podaj nazwę i prawidłowy typ kategorii.</value></data>
-  <data name="TransactionInvalid" xml:space="preserve"><value>Kwota musi być dodatnia, a typ musi oznaczać przychód albo wydatek.</value></data>
-  <data name="TransferInvalid" xml:space="preserve"><value>Wybierz dwa różne konta i podaj dodatnią kwotę.</value></data>
+  <data name="DisplayNameRequired" xml:space="preserve"><value>Podaj nazwę wyświetlaną o długości do 100 znaków.</value></data>
+  <data name="BudgetSpaceNameRequired" xml:space="preserve"><value>Podaj nazwę budżetu o długości do 100 znaków.</value></data>
+  <data name="AccountNameRequired" xml:space="preserve"><value>Podaj nazwę konta o długości do 100 znaków.</value></data>
+  <data name="OpeningBalanceNonNegative" xml:space="preserve"><value>Podaj nieujemne saldo otwarcia z maksymalnie dwoma miejscami po przecinku.</value></data>
+  <data name="NameRequired" xml:space="preserve"><value>Podaj nazwę o długości do 100 znaków.</value></data>
+  <data name="AccountInvalid" xml:space="preserve"><value>Podaj prawidłową nazwę i typ konta oraz saldo otwarcia z maksymalnie dwoma miejscami po przecinku.</value></data>
+  <data name="CategoryInvalid" xml:space="preserve"><value>Podaj nazwę o długości do 100 znaków i prawidłowy typ kategorii.</value></data>
+  <data name="TransactionInvalid" xml:space="preserve"><value>Podaj prawidłową datę, dodatnią kwotę z maksymalnie dwoma miejscami po przecinku, typ i opis do 500 znaków.</value></data>
+  <data name="TransferInvalid" xml:space="preserve"><value>Wybierz różne konta i podaj prawidłową datę, dodatnią kwotę z maksymalnie dwoma miejscami po przecinku oraz opis do 500 znaków.</value></data>
   <data name="DateRangeInvalid" xml:space="preserve"><value>Podaj poprawny zakres dat.</value></data>
   <data name="ConfirmationEmailSent" xml:space="preserve"><value>Wysłaliśmy link potwierdzający na podany adres e-mail.</value></data>
   <data name="EmailConfirmed" xml:space="preserve"><value>Adres e-mail został potwierdzony.</value></data>

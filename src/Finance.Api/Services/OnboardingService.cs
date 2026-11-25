@@ -14,7 +14,20 @@ public sealed class OnboardingService(FinanceDbContext database) : IOnboardingSe
     {
         if (user.OnboardingCompleted) return;
 
+        if (!database.Database.IsRelational())
+        {
+            await SaveOnboardingAsync(user, request, cancellationToken);
+            return;
+        }
+
         await using var transaction = await database.Database.BeginTransactionAsync(cancellationToken);
+        await SaveOnboardingAsync(user, request, cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+    }
+
+    private async Task SaveOnboardingAsync(FinanceUser user, CompleteOnboardingRequest request,
+        CancellationToken cancellationToken)
+    {
         var existingAccount = await database.Accounts
             .AnyAsync(account => account.BudgetSpace!.OwnerId == user.Id, cancellationToken);
 
@@ -48,6 +61,5 @@ public sealed class OnboardingService(FinanceDbContext database) : IOnboardingSe
         user.DisplayName = request.DisplayName!.Trim();
         user.OnboardingCompleted = true;
         await database.SaveChangesAsync(cancellationToken);
-        await transaction.CommitAsync(cancellationToken);
     }
 }

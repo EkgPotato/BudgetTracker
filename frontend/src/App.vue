@@ -2,7 +2,7 @@
 import { computed, onMounted, ref } from 'vue'
 import { ChevronLeft, CreditCard, FolderTree, House, LogOut, Plus, ReceiptText } from '@lucide/vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ApiError, api, session } from '@/api'
+import { api, session } from '@/api'
 import LanguageSelector from '@/components/LanguageSelector.vue'
 import ThemeToggle from '@/components/ThemeToggle.vue'
 import { locale, t } from '@/i18n'
@@ -29,16 +29,13 @@ const links = [
 function logout(): void { session.clear(); router.push('/auth') }
 
 onMounted(async () => {
-  if (!session.token) return
+  const token = session.token
+  if (!token) return
 
   try {
-    session.updateUser(await api.me())
-  } catch (error: unknown) {
-    if (error instanceof ApiError && error.status === 401) {
-      session.clear()
-      await router.replace('/auth')
-    }
-  }
+    const user = await api.me()
+    if (session.token === token) session.updateUser(user)
+  } catch { /* Keep the current session if the server cannot be reached. */ }
 })
 </script>
 

@@ -1,6 +1,6 @@
 import { ref } from 'vue'
 import { locale, t } from './i18n'
-import type { Account, AccountType, BudgetSpace, Category, Dashboard, DateRangeReport, MonthlyReport, Transaction, TransactionKind } from './types'
+import type { Account, AccountType, BudgetSpace, Category, Dashboard, DateRangeReport, MonthlyReport, OperationKind, Transaction, TransactionKind } from './types'
 
 const apiBaseUrl = '/api'
 const accessTokenKey = 'grosik.access-token'
@@ -15,6 +15,18 @@ export interface CreateTransferRequest { sourceAccountId: string; destinationAcc
 export interface CompleteOnboardingRequest { displayName: string; budgetSpaceName: string; accountName: string; accountType: AccountType; openingBalance: number }
 export interface ChangeEmailRequest { newEmail: string; currentPassword: string }
 export interface ChangePasswordRequest { currentPassword: string; newPassword: string }
+export interface TransactionPageRequest { offset: number; limit: number; from?: string; to?: string; kinds?: OperationKind[]; accountIds?: string[]; categoryIds?: string[] }
+export interface TransactionPage { items: Transaction[]; total: number; offset: number; limit: number }
+
+function transactionPageQuery(filters: TransactionPageRequest): string {
+  const query = new URLSearchParams({ offset: String(filters.offset), limit: String(filters.limit) })
+  if (filters.from) query.set('from', filters.from)
+  if (filters.to) query.set('to', filters.to)
+  for (const kind of filters.kinds ?? []) query.append('kinds', kind)
+  for (const id of filters.accountIds ?? []) query.append('accountIds', id)
+  for (const id of filters.categoryIds ?? []) query.append('categoryIds', id)
+  return query.toString()
+}
 
 function isAuthUser(value: unknown): value is AuthUser {
   if (typeof value !== 'object' || value === null) return false
@@ -31,6 +43,12 @@ function readStoredUser(): AuthUser | null {
 }
 
 const currentUser = ref<AuthUser | null>(readStoredUser())
+const sessionExpiredListeners = new Set<() => void>()
+
+export function onSessionExpired(listener: () => void): () => void {
+  sessionExpiredListeners.add(listener)
+  return () => sessionExpiredListeners.delete(listener)
+}
 
 export const session = {
   get token(): string | null { return localStorage.getItem(accessTokenKey) },
@@ -63,15 +81,25 @@ async function responseMessage(response: Response): Promise<string> {
 async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   const headers = new Headers(init.headers)
   if (!(init.body instanceof FormData)) headers.set('Content-Type', 'application/json')
-  if (session.token) headers.set('Authorization', `Bearer ${session.token}`)
+  const requestToken = session.token
+  if (requestToken) headers.set('Authorization', `Bearer ${requestToken}`)
   headers.set('Accept-Language', locale.value)
   const response = await fetch(`${apiBaseUrl}${path}`, { ...init, headers })
-  if (!response.ok) { if (response.status === 401 || response.status === 403) session.clear(); throw new ApiError(response.status, await responseMessage(response)) }
+  if (!response.ok) {
+    if (response.status === 401 && requestToken && session.token === requestToken) {
+      session.clear()
+      sessionExpiredListeners.forEach(listener => listener())
+    }
+    const message = response.status === 401 && path === '/auth/login'
+      ? t('auth.invalidCredentials') : await responseMessage(response)
+    throw new ApiError(response.status, message)
+  }
   return response.status === 204 ? undefined as T : response.json() as Promise<T>
 }
 
 export const api = {
   dashboard: () => request<Dashboard>('/dashboard'), spaces: () => request<BudgetSpace[]>('/budget-spaces'), accounts: () => request<Account[]>('/accounts'), categories: () => request<Category[]>('/categories'), transactions: () => request<Transaction[]>('/transactions'),
+  transactionPage: (filters: TransactionPageRequest) => request<TransactionPage>(`/transactions/page?${transactionPageQuery(filters)}`),
   createAccount: (data: CreateAccountRequest) => request<Account>('/accounts', { method: 'POST', body: JSON.stringify(data) }),
   createCategory: (data: CreateCategoryRequest) => request<Category>('/categories', { method: 'POST', body: JSON.stringify(data) }),
   createTransaction: (data: CreateTransactionRequest) => request<Transaction>('/transactions', { method: 'POST', body: JSON.stringify(data) }),

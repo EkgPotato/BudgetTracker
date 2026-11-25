@@ -35,7 +35,7 @@ public sealed class AuthRequestValidator
 
     public Dictionary<string, string[]> Validate(UpdateProfileRequest request)
     {
-        return string.IsNullOrWhiteSpace(request.DisplayName)
+        return !InputLimits.IsValidName(request.DisplayName)
             ? new Dictionary<string, string[]> { ["displayName"] = [ValidationMessages.Get("DisplayNameRequired")] }
             : new Dictionary<string, string[]>();
     }
@@ -67,13 +67,13 @@ public sealed class AuthRequestValidator
     public Dictionary<string, string[]> Validate(CompleteOnboardingRequest request)
     {
         var errors = new Dictionary<string, string[]>();
-        if (string.IsNullOrWhiteSpace(request.DisplayName))
+        if (!InputLimits.IsValidName(request.DisplayName))
             errors["displayName"] = [ValidationMessages.Get("DisplayNameRequired")];
-        if (string.IsNullOrWhiteSpace(request.BudgetSpaceName))
+        if (!InputLimits.IsValidName(request.BudgetSpaceName))
             errors["budgetSpaceName"] = [ValidationMessages.Get("BudgetSpaceNameRequired")];
-        if (string.IsNullOrWhiteSpace(request.AccountName))
+        if (!InputLimits.IsValidName(request.AccountName))
             errors["accountName"] = [ValidationMessages.Get("AccountNameRequired")];
-        if (request.OpeningBalance < 0)
+        if (!InputLimits.IsValidAmount(request.OpeningBalance))
             errors["openingBalance"] = [ValidationMessages.Get("OpeningBalanceNonNegative")];
         return errors;
     }

@@ -3,10 +3,10 @@ import { api } from '@/api'
 import { dateRangeForPreset, type DateRangePreset } from '@/dateRange'
 import { t } from '@/i18n'
 import { toCents } from '@/money'
-import type { Account, Category, Transaction, TransactionKind } from '@/types'
+import type { Account, Category, Transaction, OperationKind } from '@/types'
 
 export interface TransactionFilters {
-  kinds: TransactionKind[]
+  kinds: OperationKind[]
   accountIds: string[]
   categoryIds: string[]
   from: string
@@ -30,7 +30,11 @@ interface UseTransactionsReturn {
   balanceCents: ComputedRef<number>
   categoryBreakdown: ComputedRef<TransactionCategoryTotal[]>
   maxCategoryCents: ComputedRef<number>
+  total: Ref<number>
+  page: Ref<number>
+  pageSize: number
   load: () => Promise<void>
+  loadPage: () => Promise<void>
   applyPreset: () => void
   resetFilters: () => void
 }
@@ -43,11 +47,30 @@ export function useTransactions(): UseTransactionsReturn {
   const categories = ref<Category[]>([])
   const filters = ref<TransactionFilters>(emptyFilters())
   const datePreset = ref<DateRangePreset>('month')
+  const total = ref(0)
+  const page = ref(1)
+  const pageSize = 25
+  let requestVersion = 0
+
+  const selectedCategories = computed(() => {
+    const selected = new Set(filters.value.categoryIds)
+    let changed = true
+    while (changed) {
+      changed = false
+      for (const category of categories.value) {
+        if (category.parentCategoryId && selected.has(category.parentCategoryId) && !selected.has(category.id)) {
+          selected.add(category.id)
+          changed = true
+        }
+      }
+    }
+    return selected
+  })
 
   const filteredItems = computed(() => items.value.filter(transaction =>
     (!filters.value.kinds.length || filters.value.kinds.includes(transaction.kind)) &&
     (!filters.value.accountIds.length || filters.value.accountIds.includes(transaction.accountId)) &&
-    (!filters.value.categoryIds.length || (transaction.categoryId != null && filters.value.categoryIds.includes(transaction.categoryId))) &&
+    (!filters.value.categoryIds.length || (transaction.categoryId != null && selectedCategories.value.has(transaction.categoryId))) &&
     (!filters.value.from || transaction.occurredOn >= filters.value.from) &&
     (!filters.value.to || transaction.occurredOn <= filters.value.to)))
 
@@ -71,7 +94,21 @@ export function useTransactions(): UseTransactionsReturn {
   const maxCategoryCents = computed(() => Math.max(...categoryBreakdown.value.map(item => item.cents), 1))
 
   async function load(): Promise<void> {
-    [items.value, accounts.value, categories.value] = await Promise.all([api.transactions(), api.accounts(), api.categories()])
+    ;[accounts.value, categories.value] = await Promise.all([api.accounts(), api.categories()])
+    await loadPage()
+  }
+
+  async function loadPage(): Promise<void> {
+    const version = ++requestVersion
+    const result = await api.transactionPage({
+      offset: (page.value - 1) * pageSize, limit: pageSize,
+      from: filters.value.from, to: filters.value.to,
+      kinds: filters.value.kinds, accountIds: filters.value.accountIds,
+      categoryIds: [...selectedCategories.value],
+    })
+    if (version !== requestVersion) return
+    items.value = result.items
+    total.value = result.total
   }
 
   function applyPreset(): void {
@@ -81,8 +118,7 @@ export function useTransactions(): UseTransactionsReturn {
 
   function resetFilters(): void {
     filters.value = emptyFilters()
-    datePreset.value = 'month'
-    applyPreset()
+    datePreset.value = 'custom'
   }
 
   return {
@@ -97,7 +133,11 @@ export function useTransactions(): UseTransactionsReturn {
     balanceCents,
     categoryBreakdown,
     maxCategoryCents,
+    total,
+    page,
+    pageSize,
     load,
+    loadPage,
     applyPreset,
     resetFilters,
   }

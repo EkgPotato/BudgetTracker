@@ -3,6 +3,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Security.Claims;
 using System.Globalization;
+using System.Threading.RateLimiting;
 using Finance.Api.Configuration;
 using Finance.Api.Features;
 using Finance.Api.Managers;
@@ -20,8 +21,9 @@ using Microsoft.IdentityModel.Tokens;
 var builder = WebApplication.CreateBuilder(args);
 if (builder.Environment.IsEnvironment("Testing"))
 {
+    var databaseName = $"Finance.TestMode.{Guid.NewGuid():N}";
     builder.Services.AddDbContext<FinanceDbContext>(options =>
-        options.UseInMemoryDatabase("Finance.TestMode"));
+        options.UseInMemoryDatabase(databaseName));
 }
 else
 {
@@ -44,6 +46,9 @@ builder.Services.AddIdentityCore<FinanceUser>(options =>
         options.User.RequireUniqueEmail = true;
         options.Password.RequiredLength = 8;
         options.Password.RequireNonAlphanumeric = false;
+        options.Lockout.AllowedForNewUsers = true;
+        options.Lockout.MaxFailedAccessAttempts = 5;
+        options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
     })
     .AddEntityFrameworkStores<FinanceDbContext>()
     .AddDefaultTokenProviders();
@@ -82,6 +87,19 @@ builder.Services
         };
     });
 builder.Services.AddAuthorization();
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.AddPolicy("login", context => RateLimitPartition.GetFixedWindowLimiter(
+        context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+        _ => new FixedWindowRateLimiterOptions
+        {
+            PermitLimit = 20,
+            Window = TimeSpan.FromMinutes(1),
+            QueueLimit = 0,
+            AutoReplenishment = true
+        }));
+});
 builder.Services.AddLocalization();
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
@@ -120,6 +138,7 @@ app.UseRequestLocalization(localizationOptions);
 if (app.Environment.IsEnvironment("Testing"))
     await TestDataSeeder.SeedAsync(app.Services, app.Configuration);
 app.UseCors();
+app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
 if (app.Environment.IsDevelopment()) app.MapOpenApi();

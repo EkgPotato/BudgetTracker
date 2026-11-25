@@ -5,6 +5,7 @@ using Finance.Api.Features;
 using Finance.Localization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace Finance.Api.Controllers;
 
@@ -49,6 +50,7 @@ public sealed class AuthController(IAuthManager manager, AuthRequestValidator va
 
     [AllowAnonymous]
     [HttpPost("login")]
+    [EnableRateLimiting("login")]
     public async Task<ActionResult<LoginResponse>> Login(LoginRequest request)
     {
         var errors = validator.Validate(request);

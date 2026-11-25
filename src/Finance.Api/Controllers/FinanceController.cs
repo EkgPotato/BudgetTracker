@@ -72,6 +72,15 @@ public sealed class FinanceController(IFinanceManager manager, FinanceRequestVal
         return WithOwnerAsync(ownerId => manager.GetTransactionsAsync(ownerId, token));
     }
 
+    [HttpGet("transactions/page")]
+    public async Task<IActionResult> GetTransactionPage([FromQuery] TransactionPageQuery query, CancellationToken token)
+    {
+        if (OwnerId is null) return Unauthorized();
+        if (query.Offset < 0 || query.Limit is < 1 or > 100 || query.From > query.To ||
+            query.Kinds.Any(kind => !Enum.IsDefined(kind))) return BadRequest();
+        return Ok(await manager.GetTransactionPageAsync(OwnerId, query, token));
+    }
+
     [HttpPost("transactions")]
     public async Task<IActionResult> CreateTransaction(TransactionRequest request, CancellationToken token)
     {
@@ -104,7 +113,7 @@ public sealed class FinanceController(IFinanceManager manager, FinanceRequestVal
     public async Task<IActionResult> GetMonthlyReport(int year, int month, CancellationToken token)
     {
         if (OwnerId is null) return Unauthorized();
-        if (year is < 1 or > 9999 || month is < 1 or > 12) return BadRequest();
+        if (year is < 1 or > 9999 || month is < 1 or > 12 || (year == 9999 && month == 12)) return BadRequest();
 
         return Ok(await manager.MonthlyReportAsync(OwnerId, year, month, token));
     }

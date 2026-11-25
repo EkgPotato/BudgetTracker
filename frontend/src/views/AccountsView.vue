@@ -28,6 +28,7 @@ async function load(): Promise<void> {
 }
 
 async function save(): Promise<void> {
+  if (busy.value) return
   error.value = ''
   saved.value = ''
   if (!form.value.budgetSpaceId) { error.value = t('finance.accounts.selectBudgetSpace'); return }
@@ -56,7 +57,8 @@ onMounted(() => { void load() })
       <p v-if="loading" class="muted">{{ t('finance.accounts.loading') }}</p>
       <template v-else>
         <div v-for="account in accounts" :key="account.id" class="account-row"><span class="account-icon">▣</span><span>{{ account.name }}<small>{{ accountTypeLabel(account.type) }}</small></span><strong>{{ formatMoney(account.balance) }}</strong></div>
-        <p v-if="!accounts.length" class="empty">{{ t('finance.accounts.empty') }}</p>
+        <p v-if="!accounts.length && !error" class="empty">{{ t('finance.accounts.empty') }}</p>
+        <div v-if="error" class="notice" role="alert">{{ error }} <el-button @click="load">{{ t('operations.retry') }}</el-button></div>
       </template>
     </section>
 

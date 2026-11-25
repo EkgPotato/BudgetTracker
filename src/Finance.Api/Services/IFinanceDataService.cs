@@ -1,5 +1,7 @@
 using Finance.Api.Contracts.Finance;
 using Finance.Domain.Entities;
+using Finance.Domain.Enums;
+using Finance.Domain.Services;
 
 namespace Finance.Api.Services;
 
@@ -8,10 +10,27 @@ public interface IFinanceDataService
     Task<List<BudgetSpace>> GetSpacesAsync(string ownerId, CancellationToken cancellationToken);
     Task<BudgetSpace> CreateSpaceAsync(string ownerId, BudgetSpaceRequest request, CancellationToken cancellationToken);
     Task<List<Account>> GetAccountsAsync(string ownerId, CancellationToken cancellationToken);
+    async Task<IReadOnlyList<AccountResponse>> GetAccountBalancesAsync(string ownerId, CancellationToken cancellationToken)
+    {
+        var accounts = await GetAccountsAsync(ownerId, cancellationToken);
+        return accounts.Select(account => new AccountResponse(account.Id, account.Name, account.Type, account.Currency,
+            account.IsActive, account.BudgetSpaceId, account.BudgetSpace?.Name ?? string.Empty,
+            BalanceCalculator.Sum(account.Transactions))).ToList();
+    }
     Task<Account?> CreateAccountAsync(string ownerId, AccountRequest request, CancellationToken cancellationToken);
     Task<List<Category>> GetCategoriesAsync(string ownerId, CancellationToken cancellationToken);
     Task<Category?> CreateCategoryAsync(string ownerId, CategoryRequest request, CancellationToken cancellationToken);
     Task<List<FinancialTransaction>> GetTransactionsAsync(string ownerId, CancellationToken cancellationToken);
+    Task<TransactionPageResponse> GetTransactionPageAsync(string ownerId, TransactionPageQuery query, CancellationToken cancellationToken)
+        => throw new NotSupportedException();
+    async Task<IReadOnlyList<ReportCategoryResponse>> GetReportCategoriesAsync(string ownerId, DateOnly from, DateOnly to, CancellationToken cancellationToken)
+    {
+        var rows = await GetTransactionsAsync(ownerId, from, to, null, cancellationToken);
+        return rows.Where(item => item.Kind is TransactionKind.Income or TransactionKind.Expense)
+            .GroupBy(item => new { item.Kind, item.CategoryId, Category = item.Category?.Name })
+            .Select(group => new ReportCategoryResponse(group.Key.Kind, group.Key.CategoryId, group.Key.Category,
+                group.Sum(item => item.Amount), group.Count())).ToList();
+    }
     async Task<List<FinancialTransaction>> GetTransactionsAsync(
         string ownerId,
         DateOnly? from,

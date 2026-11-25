@@ -25,6 +25,7 @@ function updatePreset(value: DateRangePreset): void {
 
 const dateOpen = ref(false)
 const dateLabel = computed(() => {
+  if (!props.filters.from && !props.filters.to) return t('finance.transactions.allDates')
   const keys = { day: 'finance.transactions.day', month: 'finance.transactions.month', year: 'finance.transactions.year', custom: 'finance.transactions.custom' }
   return `${t(keys[props.datePreset])} · ${props.filters.from} – ${props.filters.to}`
 })
@@ -69,6 +70,7 @@ const categoryTree = computed(() => {
       <label>{{ t('finance.transactions.kinds') }}
         <el-select v-model="filters.kinds" multiple filterable clearable collapse-tags collapse-tags-tooltip :aria-label="t('finance.transactions.kindsAria')">
           <el-option value="expense" :label="t('finance.transactions.expense')" /><el-option value="income" :label="t('finance.transactions.income')" />
+          <el-option value="transferDebit" :label="t('finance.transactions.transferDebit')" /><el-option value="transferCredit" :label="t('finance.transactions.transferCredit')" /><el-option value="openingBalance" :label="t('finance.transactions.openingBalance')" />
         </el-select>
       </label>
       <label>{{ t('finance.transactions.accounts') }}

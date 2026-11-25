@@ -14,15 +14,15 @@
   <data name="PasswordRequiresNonAlphanumeric" xml:space="preserve"><value>Password must contain at least one special character.</value></data>
   <data name="UserIdRequired" xml:space="preserve"><value>User ID is required.</value></data>
   <data name="TokenRequired" xml:space="preserve"><value>Token is required.</value></data>
-  <data name="DisplayNameRequired" xml:space="preserve"><value>Enter a display name.</value></data>
-  <data name="BudgetSpaceNameRequired" xml:space="preserve"><value>Enter a budget space name.</value></data>
-  <data name="AccountNameRequired" xml:space="preserve"><value>Enter an account name.</value></data>
-  <data name="OpeningBalanceNonNegative" xml:space="preserve"><value>Opening balance cannot be negative.</value></data>
-  <data name="NameRequired" xml:space="preserve"><value>Name is required.</value></data>
-  <data name="AccountInvalid" xml:space="preserve"><value>Enter a name and a non-negative opening balance.</value></data>
-  <data name="CategoryInvalid" xml:space="preserve"><value>Enter a name and a valid category type.</value></data>
-  <data name="TransactionInvalid" xml:space="preserve"><value>Amount must be positive and the type must be income or expense.</value></data>
-  <data name="TransferInvalid" xml:space="preserve"><value>Select two different accounts and enter a positive amount.</value></data>
+  <data name="DisplayNameRequired" xml:space="preserve"><value>Enter a display name of up to 100 characters.</value></data>
+  <data name="BudgetSpaceNameRequired" xml:space="preserve"><value>Enter a budget name of up to 100 characters.</value></data>
+  <data name="AccountNameRequired" xml:space="preserve"><value>Enter an account name of up to 100 characters.</value></data>
+  <data name="OpeningBalanceNonNegative" xml:space="preserve"><value>Enter a non-negative opening balance with at most two decimal places.</value></data>
+  <data name="NameRequired" xml:space="preserve"><value>Enter a name of up to 100 characters.</value></data>
+  <data name="AccountInvalid" xml:space="preserve"><value>Enter a valid account name, type, and opening balance with at most two decimal places.</value></data>
+  <data name="CategoryInvalid" xml:space="preserve"><value>Enter a name of up to 100 characters and a valid category type.</value></data>
+  <data name="TransactionInvalid" xml:space="preserve"><value>Enter a valid date, positive amount with at most two decimal places, type, and description of up to 500 characters.</value></data>
+  <data name="TransferInvalid" xml:space="preserve"><value>Select different accounts and enter a valid date, positive amount with at most two decimal places, and description of up to 500 characters.</value></data>
   <data name="DateRangeInvalid" xml:space="preserve"><value>Enter a valid date range.</value></data>
   <data name="ConfirmationEmailSent" xml:space="preserve"><value>We sent a confirmation link to the provided email address.</value></data>
   <data name="EmailConfirmed" xml:space="preserve"><value>Email address confirmed.</value></data>

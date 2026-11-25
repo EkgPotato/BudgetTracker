@@ -3,7 +3,7 @@ import { createPinia } from 'pinia'
 import App from './App.vue'
 import { router } from './router'
 import { locale, setLocale } from './i18n'
-import ElementPlus from 'element-plus'
+import { ElButton, ElConfigProvider, ElDatePicker, ElDialog, ElInput, ElInputNumber, ElLoading, ElOption, ElPagination, ElPopover, ElSelect, ElTable, ElTableColumn, ElTreeSelect } from 'element-plus'
 import 'element-plus/dist/index.css'
 import 'element-plus/theme-chalk/dark/css-vars.css'
 import { setTheme, theme } from './theme'
@@ -18,8 +18,7 @@ setLocale(locale.value)
 setTheme(theme.value)
 installValidationMessages()
 
-createApp(App)
-  .use(ElementPlus)
-  .use(createPinia())
-  .use(router)
-  .mount('#app')
+const app = createApp(App)
+for (const component of [ElButton, ElConfigProvider, ElDatePicker, ElDialog, ElInput, ElInputNumber, ElOption, ElPagination, ElPopover, ElSelect, ElTable, ElTableColumn, ElTreeSelect]) app.use(component)
+app.directive('loading', ElLoading.directive)
+app.use(createPinia()).use(router).mount('#app')

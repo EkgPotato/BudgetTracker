@@ -1,27 +1,25 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import DashboardView from './views/DashboardView.vue'
-import TransactionsView from './views/TransactionsView.vue'
-import AccountsView from './views/AccountsView.vue'
-import CategoriesView from './views/CategoriesView.vue'
-import ReportsView from './views/ReportsView.vue'
-import AuthView from './views/AuthView.vue'
-import OnboardingView from './views/OnboardingView.vue'
-import ProfileView from './views/ProfileView.vue'
-import { session } from './api'
+import { onSessionExpired, session } from './api'
 
 export const router = createRouter({
   history: createWebHistory(),
   routes: [
-    { path: '/auth', component: AuthView, meta: { public: true, titleKey: 'route.auth' } },
-    { path: '/onboarding', component: OnboardingView, meta: { public: true, onboarding: true, titleKey: 'route.onboarding' } },
-    { path: '/', component: DashboardView, meta: { titleKey: 'nav.overview' } },
-    { path: '/transakcje', component: TransactionsView, meta: { titleKey: 'nav.transactions' } },
+    { path: '/auth', component: () => import('./views/AuthView.vue'), meta: { public: true, titleKey: 'route.auth' } },
+    { path: '/onboarding', component: () => import('./views/OnboardingView.vue'), meta: { public: true, onboarding: true, titleKey: 'route.onboarding' } },
+    { path: '/', component: () => import('./views/DashboardView.vue'), meta: { titleKey: 'nav.overview' } },
+    { path: '/transakcje', component: () => import('./views/TransactionsView.vue'), meta: { titleKey: 'nav.transactions' } },
     { path: '/transfery', redirect: '/konta' },
-    { path: '/konta', component: AccountsView, meta: { titleKey: 'nav.accounts' } },
-    { path: '/kategorie', component: CategoriesView, meta: { titleKey: 'nav.categories' } },
-    { path: '/raporty', component: ReportsView, meta: { titleKey: 'nav.reports' } },
-    { path: '/profil', component: ProfileView, meta: { titleKey: 'nav.profile' } }
+    { path: '/konta', component: () => import('./views/AccountsView.vue'), meta: { titleKey: 'nav.accounts' } },
+    { path: '/kategorie', component: () => import('./views/CategoriesView.vue'), meta: { titleKey: 'nav.categories' } },
+    { path: '/raporty', component: () => import('./views/ReportsView.vue'), meta: { titleKey: 'nav.reports' } },
+    { path: '/profil', component: () => import('./views/ProfileView.vue'), meta: { titleKey: 'nav.profile' } }
   ]
+})
+onSessionExpired(() => {
+  const current = router.currentRoute.value
+  if (current.path !== '/auth') {
+    void router.replace({ path: '/auth', query: { reason: 'expired', redirect: current.fullPath } })
+  }
 })
 router.beforeEach((to) => {
   if (!to.meta.public && !session.token) return { path: '/auth', query: { redirect: to.fullPath } }

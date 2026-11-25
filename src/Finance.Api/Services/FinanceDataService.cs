@@ -29,6 +29,20 @@ public sealed class FinanceDataService(FinanceDbContext database) : IFinanceData
             .OrderBy(account => account.Name).ToListAsync(token);
     }
 
+    public async Task<IReadOnlyList<AccountResponse>> GetAccountBalancesAsync(string ownerId, CancellationToken token)
+    {
+        return await database.Accounts.AsNoTracking()
+            .Where(account => account.BudgetSpace!.OwnerId == ownerId)
+            .OrderBy(account => account.Name)
+            .Select(account => new AccountResponse(
+                account.Id, account.Name, account.Type, account.Currency, account.IsActive, account.BudgetSpaceId,
+                account.BudgetSpace!.Name,
+                account.Transactions.Sum(item => (decimal?)(
+                    item.Kind == TransactionKind.Expense || item.Kind == TransactionKind.TransferDebit
+                        ? -item.Amount : item.Amount)) ?? 0m))
+            .ToListAsync(token);
+    }
+
     public async Task<Account?> CreateAccountAsync(string ownerId, AccountRequest request, CancellationToken token)
     {
         var space = await database.BudgetSpaces.SingleOrDefaultAsync(
@@ -82,7 +96,37 @@ public sealed class FinanceDataService(FinanceDbContext database) : IFinanceData
     public Task<List<FinancialTransaction>> GetTransactionsAsync(string ownerId, CancellationToken token)
     {
         return TransactionQuery(ownerId)
-            .OrderByDescending(item => item.OccurredOn).ToListAsync(token);
+            .OrderByDescending(item => item.OccurredOn).ThenByDescending(item => item.CreatedAtUtc)
+            .ThenByDescending(item => item.Id).ToListAsync(token);
+    }
+
+    public async Task<TransactionPageResponse> GetTransactionPageAsync(string ownerId, TransactionPageQuery filter, CancellationToken token)
+    {
+        var query = TransactionQuery(ownerId);
+        if (filter.From is not null) query = query.Where(item => item.OccurredOn >= filter.From.Value);
+        if (filter.To is not null) query = query.Where(item => item.OccurredOn <= filter.To.Value);
+        if (filter.Kinds.Length > 0) query = query.Where(item => filter.Kinds.Contains(item.Kind));
+        if (filter.AccountIds.Length > 0) query = query.Where(item => filter.AccountIds.Contains(item.AccountId));
+        if (filter.CategoryIds.Length > 0) query = query.Where(item => item.CategoryId.HasValue && filter.CategoryIds.Contains(item.CategoryId.Value));
+
+        var total = await query.CountAsync(token);
+        var items = await query.OrderByDescending(item => item.OccurredOn).ThenByDescending(item => item.CreatedAtUtc)
+            .ThenByDescending(item => item.Id).Skip(filter.Offset).Take(filter.Limit)
+            .Select(item => new TransactionResponse(item.Id, item.Kind, item.Amount, item.OccurredOn, item.Description,
+                item.AccountId, item.Account!.Name, item.CategoryId, item.Category == null ? null : item.Category.Name))
+            .ToListAsync(token);
+        return new TransactionPageResponse(items, total, filter.Offset, filter.Limit);
+    }
+
+    public async Task<IReadOnlyList<ReportCategoryResponse>> GetReportCategoriesAsync(string ownerId, DateOnly from, DateOnly to, CancellationToken token)
+    {
+        return await TransactionQuery(ownerId)
+            .Where(item => item.OccurredOn >= from && item.OccurredOn <= to &&
+                (item.Kind == TransactionKind.Income || item.Kind == TransactionKind.Expense))
+            .GroupBy(item => new { item.Kind, item.CategoryId, Category = item.Category == null ? null : item.Category.Name })
+            .Select(group => new ReportCategoryResponse(group.Key.Kind, group.Key.CategoryId, group.Key.Category,
+                group.Sum(item => item.Amount), group.Count()))
+            .ToListAsync(token);
     }
 
     public Task<List<FinancialTransaction>> GetTransactionsAsync(
@@ -95,7 +139,7 @@ public sealed class FinanceDataService(FinanceDbContext database) : IFinanceData
         var query = TransactionQuery(ownerId);
         if (from is not null) query = query.Where(item => item.OccurredOn >= from.Value);
         if (to is not null) query = query.Where(item => item.OccurredOn <= to.Value);
-        query = query.OrderByDescending(item => item.OccurredOn);
+        query = query.OrderByDescending(item => item.OccurredOn).ThenByDescending(item => item.CreatedAtUtc).ThenByDescending(item => item.Id);
         if (take is not null) query = query.Take(take.Value);
         return query.ToListAsync(token);
     }
@@ -150,6 +194,6 @@ public sealed class FinanceDataService(FinanceDbContext database) : IFinanceData
         return database.Transactions.AsNoTracking()
             .Include(item => item.Account)
             .Include(item => item.Category)
-            .Where(item => item.TransferId == null && item.Account!.BudgetSpace!.OwnerId == ownerId);
+            .Where(item => item.Account!.BudgetSpace!.OwnerId == ownerId);
     }
 }

@@ -2,6 +2,7 @@
 import { onMounted, reactive, ref } from 'vue'
 import { api, apiErrorMessage, session } from '@/api'
 import { t } from '@/i18n'
+import { useRouter } from 'vue-router'
 
 const profile = reactive({ displayName: '', email: '' })
 const emailForm = reactive({ newEmail: '', currentPassword: '' })
@@ -9,6 +10,7 @@ const passwordForm = reactive({ currentPassword: '', newPassword: '', confirmati
 const status = ref('')
 const error = ref('')
 const busy = ref<'profile' | 'email' | 'password' | null>(null)
+const router = useRouter()
 
 async function refresh(): Promise<void> {
   const user = await api.me()
@@ -31,7 +33,8 @@ async function changeEmail(): Promise<void> {
   try {
     const user = await api.changeEmail(emailForm)
     session.updateUser(user); profile.email = user.email; emailForm.currentPassword = ''
-    status.value = t('profile.emailChanged')
+    session.clear()
+    await router.replace({ path: '/auth', query: { reason: 'emailChanged' } })
   } catch (caught: unknown) { error.value = apiErrorMessage(caught, t('profile.emailChangeFailed')) } finally { busy.value = null }
 }
 
@@ -42,7 +45,8 @@ async function changePassword(): Promise<void> {
   try {
     await api.changePassword({ currentPassword: passwordForm.currentPassword, newPassword: passwordForm.newPassword })
     passwordForm.currentPassword = ''; passwordForm.newPassword = ''; passwordForm.confirmation = ''
-    status.value = t('profile.passwordChanged')
+    session.clear()
+    await router.replace({ path: '/auth', query: { reason: 'passwordChanged' } })
   } catch (caught: unknown) { error.value = apiErrorMessage(caught, t('profile.passwordChangeFailed')) } finally { busy.value = null }
 }
 

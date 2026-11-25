@@ -1,6 +1,15 @@
-import { t } from './i18n'
+import { watch } from 'vue'
+import { locale, t } from './i18n'
 
 let nextId = 0
+let installed = false
+
+function validationMessage(input: HTMLInputElement): string {
+  const key = input.validity.valueMissing ? 'validation.required'
+    : input.validity.typeMismatch ? 'validation.email'
+      : input.validity.tooShort ? 'validation.tooShort' : 'validation.invalid'
+  return t(key, { min: input.minLength })
+}
 
 function clearError(input: HTMLInputElement): void {
   const id = input.dataset.validationError
@@ -14,18 +23,24 @@ function clearError(input: HTMLInputElement): void {
 }
 
 export function installValidationMessages(): void {
+  if (installed) return
+  installed = true
+  watch(locale, () => {
+    document.querySelectorAll<HTMLInputElement>('input[data-validation-error]').forEach(input => {
+      const message = document.getElementById(input.dataset.validationError ?? '')
+      if (message) message.textContent = validationMessage(input)
+    })
+  })
   document.addEventListener('invalid', event => {
     const input = event.target
     if (!(input instanceof HTMLInputElement) || !input.form) return
     event.preventDefault()
     clearError(input)
-    const key = input.validity.valueMissing ? 'validation.required'
-      : input.validity.typeMismatch ? 'validation.email'
-        : input.validity.tooShort ? 'validation.tooShort' : 'validation.invalid'
     const message = document.createElement('span')
     message.className = 'field-error'
     message.id = `field-error-${++nextId}`
-    message.textContent = t(key, { min: input.minLength })
+    message.setAttribute('role', 'alert')
+    message.textContent = validationMessage(input)
     input.dataset.validationError = message.id
     input.setAttribute('aria-invalid', 'true')
     input.setAttribute('aria-describedby', [input.getAttribute('aria-describedby'), message.id].filter(Boolean).join(' '))

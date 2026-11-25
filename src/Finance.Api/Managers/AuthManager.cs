@@ -93,8 +93,14 @@ public sealed class AuthManager(
     public async Task<LoginResponse?> LoginAsync(LoginRequest request)
     {
         var user = await users.FindByEmailAsync(request.Email!.Trim());
-        if (user is null || !await users.CheckPasswordAsync(user, request.Password!) ||
-            !user.EmailConfirmed) return null;
+        if (user is null || await users.IsLockedOutAsync(user)) return null;
+        if (!await users.CheckPasswordAsync(user, request.Password!))
+        {
+            await users.AccessFailedAsync(user);
+            return null;
+        }
+        await users.ResetAccessFailedCountAsync(user);
+        if (!user.EmailConfirmed) return null;
 
         return new LoginResponse(tokenManager.Create(user), ToResponse(user));
     }

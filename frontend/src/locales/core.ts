@@ -1,5 +1,6 @@
 export const coreMessages = {
   en: {
+    'auth.sessionExpired': 'Your session has expired. Please sign in again.', 'auth.passwordChangedSignIn': 'Password changed. Please sign in again.', 'auth.emailChangedSignIn': 'Email changed. Confirm the new address and sign in again.', 'auth.invalidCredentials': 'The email or password is incorrect, or the email has not been confirmed.',
     'nav.collapse': 'Collapse navigation', 'nav.expand': 'Expand navigation',
     'theme.dark': 'Switch to dark mode', 'theme.light': 'Switch to light mode',
     'validation.required': 'This field is required.', 'validation.email': 'Enter a valid email address.', 'validation.tooShort': 'Enter at least {min} characters.', 'validation.invalid': 'Check this value.',
@@ -12,6 +13,7 @@ export const coreMessages = {
     'route.auth': 'Welcome to Grosik', 'route.onboarding': 'Initial setup'
   },
   pl: {
+    'auth.sessionExpired': 'Sesja wygasła. Zaloguj się ponownie.', 'auth.passwordChangedSignIn': 'Hasło zostało zmienione. Zaloguj się ponownie.', 'auth.emailChangedSignIn': 'Adres e-mail został zmieniony. Potwierdź nowy adres i zaloguj się ponownie.', 'auth.invalidCredentials': 'Nieprawidłowy adres e-mail lub hasło albo adres e-mail nie został potwierdzony.',
     'nav.collapse': 'Zwiń nawigację', 'nav.expand': 'Rozwiń nawigację',
     'theme.dark': 'Włącz tryb ciemny', 'theme.light': 'Włącz tryb jasny',
     'validation.required': 'To pole jest wymagane.', 'validation.email': 'Wpisz poprawny adres e-mail.', 'validation.tooShort': 'Wpisz co najmniej {min} znaków.', 'validation.invalid': 'Sprawdź poprawność tej wartości.',

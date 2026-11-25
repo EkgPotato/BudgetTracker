@@ -23,7 +23,7 @@ public sealed class FinanceManager(IFinanceDataService dataService) : IFinanceMa
 
     public async Task<IReadOnlyList<AccountResponse>> GetAccountsAsync(string ownerId, CancellationToken token)
     {
-        return (await dataService.GetAccountsAsync(ownerId, token)).Select(ToAccount).ToList();
+        return await dataService.GetAccountBalancesAsync(ownerId, token);
     }
 
     public async Task<AccountResponse?> CreateAccountAsync(string ownerId, AccountRequest request,
@@ -55,6 +55,9 @@ public sealed class FinanceManager(IFinanceDataService dataService) : IFinanceMa
         return (await dataService.GetTransactionsAsync(ownerId, token)).Select(ToTransaction).ToList();
     }
 
+    public Task<TransactionPageResponse> GetTransactionPageAsync(string ownerId, TransactionPageQuery query, CancellationToken token)
+        => dataService.GetTransactionPageAsync(ownerId, query, token);
+
     public async Task<TransactionResponse?> CreateTransactionAsync(string ownerId, TransactionRequest request,
         CancellationToken token)
     {
@@ -81,12 +84,12 @@ public sealed class FinanceManager(IFinanceDataService dataService) : IFinanceMa
         var today = DateOnly.FromDateTime(DateTime.Today);
         var startOfMonth = new DateOnly(today.Year, today.Month, 1);
         var endOfMonth = startOfMonth.AddMonths(1).AddDays(-1);
-        var currentMonth = await dataService.GetTransactionsAsync(ownerId, startOfMonth, endOfMonth, null, token);
-        var recentTransactions = currentMonth.Take(8).Select(ToTransaction).ToList();
+        var currentMonth = await dataService.GetReportCategoriesAsync(ownerId, startOfMonth, endOfMonth, token);
+        var recentTransactions = (await dataService.GetTransactionsAsync(ownerId, null, null, 8, token)).Select(ToTransaction).ToList();
         return new DashboardResponse(
             accounts.Sum(account => account.Balance),
-            currentMonth.Where(item => item.Kind == TransactionKind.Income).Sum(item => item.Amount),
-            currentMonth.Where(item => item.Kind == TransactionKind.Expense).Sum(item => item.Amount),
+            currentMonth.Where(item => item.Kind == TransactionKind.Income).Sum(item => item.Total),
+            currentMonth.Where(item => item.Kind == TransactionKind.Expense).Sum(item => item.Total),
             accounts,
             recentTransactions);
     }
@@ -125,21 +128,10 @@ public sealed class FinanceManager(IFinanceDataService dataService) : IFinanceMa
         DateOnly to,
         CancellationToken token)
     {
-        var rows = (await dataService.GetTransactionsAsync(ownerId, from, to, null, token))
-            .Where(item => item.Kind is TransactionKind.Income or TransactionKind.Expense)
-            .ToList();
-        var categories = rows
-            .GroupBy(item => new { item.Kind, item.CategoryId, Category = item.Category?.Name })
-            .Select(group => new ReportCategoryResponse(
-                group.Key.Kind,
-                group.Key.CategoryId,
-                group.Key.Category,
-                group.Sum(item => item.Amount),
-                group.Count()))
-            .ToList();
+        var categories = await dataService.GetReportCategoriesAsync(ownerId, from, to, token);
         return new ReportSummary(
-            rows.Where(item => item.Kind == TransactionKind.Income).Sum(item => item.Amount),
-            rows.Where(item => item.Kind == TransactionKind.Expense).Sum(item => item.Amount),
+            categories.Where(item => item.Kind == TransactionKind.Income).Sum(item => item.Total),
+            categories.Where(item => item.Kind == TransactionKind.Expense).Sum(item => item.Total),
             categories);
     }
 

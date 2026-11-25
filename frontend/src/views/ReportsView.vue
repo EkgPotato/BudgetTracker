@@ -11,6 +11,7 @@ const from = ref('')
 const to = ref('')
 const report = ref<DateRangeReport>()
 const error = ref('')
+let requestVersion = 0
 const title = computed(() => t(`finance.reports.title${preset.value[0].toUpperCase()}${preset.value.slice(1)}`))
 const balanceCents = computed(() => toCents(report.value?.income ?? 0) - toCents(report.value?.expenses ?? 0))
 function applyPreset(): void {
@@ -19,7 +20,17 @@ function applyPreset(): void {
   from.value = range.from
   to.value = range.to
 }
-async function load(): Promise<void> { error.value = ''; if (!from.value || !to.value || from.value > to.value) { error.value = t('finance.reports.invalidRange'); return } try { report.value = await api.reportRange(from.value, to.value) } catch (caught: unknown) { error.value = apiErrorMessage(caught, t('finance.reports.loadError')) } }
+async function load(): Promise<void> {
+  const version = ++requestVersion
+  error.value = ''
+  if (!from.value || !to.value || from.value > to.value) { error.value = t('finance.reports.invalidRange'); report.value = undefined; return }
+  try {
+    const result = await api.reportRange(from.value, to.value)
+    if (version === requestVersion) report.value = result
+  } catch (caught: unknown) {
+    if (version === requestVersion) { report.value = undefined; error.value = apiErrorMessage(caught, t('finance.reports.loadError')) }
+  }
+}
 watch(preset, () => { if (preset.value !== 'custom') applyPreset(); void load() })
 onMounted(() => { applyPreset(); void load() })
 </script>

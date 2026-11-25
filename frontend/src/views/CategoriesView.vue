@@ -3,29 +3,45 @@ import { computed, onMounted, ref } from 'vue'
 import { api, apiErrorMessage } from '@/api'
 import { locale, t } from '@/i18n'
 import type { BudgetSpace, Category, TransactionKind } from '@/types'
+import '@/locales/operationMessages'
 
 const categories = ref<Category[]>([])
 const spaces = ref<BudgetSpace[]>([])
 const error = ref('')
 const search = ref('')
+const busy = ref(false)
+const saved = ref('')
 const form = ref({ name: '', budgetSpaceId: '', appliesTo: 'expense' as TransactionKind, parentCategoryId: '' })
 const mainCategories = computed(() => categories.value.filter(category => !category.parentCategoryId).sort((a, b) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name, locale.value)))
 const parents = computed(() => mainCategories.value.filter(category => category.budgetSpaceId === form.value.budgetSpaceId && category.appliesTo === form.value.appliesTo))
 const normalizedSearch = computed(() => search.value.trim().toLocaleLowerCase(locale.value))
 function children(parentId: string): Category[] { return categories.value.filter(category => category.parentCategoryId === parentId).sort((a, b) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name, locale.value)) }
 function isVisible(category: Category): boolean { const query = normalizedSearch.value; return !query || category.name.toLocaleLowerCase(locale.value).includes(query) || children(category.id).some(child => child.name.toLocaleLowerCase(locale.value).includes(query)) }
+function visibleChildren(category: Category): Category[] {
+  const query = normalizedSearch.value
+  if (!query || category.name.toLocaleLowerCase(locale.value).includes(query)) return children(category.id)
+  return children(category.id).filter(child => child.name.toLocaleLowerCase(locale.value).includes(query))
+}
 async function load(): Promise<void> { [categories.value, spaces.value] = await Promise.all([api.categories(), api.spaces()]); form.value.budgetSpaceId ||= spaces.value[0]?.id ?? '' }
-async function save(): Promise<void> { error.value = ''; try { await api.createCategory({ ...form.value, parentCategoryId: form.value.parentCategoryId || null, sortOrder: categories.value.length }); form.value.name = ''; form.value.parentCategoryId = ''; await load() } catch (caught: unknown) { error.value = apiErrorMessage(caught, t('finance.categories.saveError')) } }
+async function save(): Promise<void> {
+  if (busy.value) return
+  error.value = ''; saved.value = ''; busy.value = true
+  try { await api.createCategory({ ...form.value, parentCategoryId: form.value.parentCategoryId || null, sortOrder: categories.value.length }) }
+  catch (caught: unknown) { error.value = apiErrorMessage(caught, t('finance.categories.saveError')); busy.value = false; return }
+  form.value.name = ''; form.value.parentCategoryId = ''; saved.value = t('operations.categorySaved')
+  try { await load() } catch { error.value = t('operations.refreshFailed') }
+  finally { busy.value = false }
+}
 onMounted(() => { void load().catch(caught => { error.value = apiErrorMessage(caught, t('finance.categories.loadError')) }) })
 </script>
 
 <template>
   <div class="categories-page">
     <section class="categories-hero"><div><p class="section-kicker">{{ t('finance.categories.kicker') }}</p><h2>{{ t('finance.categories.title') }}</h2><p>{{ t('finance.categories.subtitle') }}</p></div><span>{{ t('finance.categories.count', { count: categories.length }) }}</span></section>
-    <p v-if="error" class="notice">{{ error }}</p>
+    <p v-if="error" class="notice" role="alert">{{ error }}</p><p v-if="saved" class="success" role="status">{{ saved }}</p>
     <div class="categories-grid">
-      <section class="panel"><div class="panel-title"><div><h2>{{ t('finance.categories.mainCategories') }}</h2><p class="muted">{{ t('finance.categories.searchHint') }}</p></div></div><label class="category-search"><span class="sr-only">{{ t('finance.categories.searchLabel') }}</span><input v-model.trim="search" type="search" :placeholder="t('finance.categories.searchPlaceholder')"></label><div v-if="mainCategories.filter(isVisible).length" class="category-tree"><article v-for="category in mainCategories.filter(isVisible)" :key="category.id" class="category-group"><div class="category-main"><div><strong>{{ category.name }}</strong><small>{{ category.appliesTo === 'expense' ? t('finance.categories.expense') : t('finance.categories.income') }}</small></div><span>{{ t('finance.categories.subcategoryCount', { count: children(category.id).length }) }}</span></div><ul v-if="children(category.id).length"><li v-for="child in children(category.id).filter(child => !normalizedSearch || child.name.toLocaleLowerCase(locale).includes(normalizedSearch))" :key="child.id"><i>↳</i>{{ child.name }}</li></ul><p v-else class="no-children">{{ t('finance.categories.noSubcategories') }}</p></article></div><p v-else class="empty">{{ t('finance.categories.noMatches') }}</p></section>
-      <section class="panel"><h2>{{ t('finance.categories.addCategory') }}</h2><p class="muted">{{ t('finance.categories.parentHint') }}</p><form @submit.prevent="save"><label>{{ t('finance.categories.name') }}<el-input v-model.trim="form.name" required :placeholder="t('finance.categories.namePlaceholder')" /></label><label>{{ t('finance.categories.budgetSpace') }}<el-select v-model="form.budgetSpaceId" filterable @change="form.parentCategoryId=''"><el-option v-for="space in spaces" :key="space.id" :value="space.id" :label="space.name" /></el-select></label><label>{{ t('finance.categories.kind') }}<el-select v-model="form.appliesTo" @change="form.parentCategoryId=''"><el-option value="expense" :label="t('finance.categories.expense')" /><el-option value="income" :label="t('finance.categories.income')" /></el-select></label><label>{{ t('finance.categories.mainCategory') }}<el-select v-model="form.parentCategoryId" filterable><el-option value="" :label="t('finance.categories.noParent')" /><el-option v-for="category in parents" :key="category.id" :value="category.id" :label="category.name" /></el-select></label><el-button type="primary" native-type="submit">{{ t('finance.categories.submit') }}</el-button></form></section>
+      <section class="panel"><div class="panel-title"><div><h2>{{ t('finance.categories.mainCategories') }}</h2><p class="muted">{{ t('finance.categories.searchHint') }}</p></div></div><label class="category-search"><span class="sr-only">{{ t('finance.categories.searchLabel') }}</span><input v-model.trim="search" type="search" :placeholder="t('finance.categories.searchPlaceholder')"></label><div v-if="mainCategories.filter(isVisible).length" class="category-tree"><article v-for="category in mainCategories.filter(isVisible)" :key="category.id" class="category-group"><div class="category-main"><div><strong>{{ category.name }}</strong><small>{{ category.appliesTo === 'expense' ? t('finance.categories.expense') : t('finance.categories.income') }}</small></div><span>{{ t('finance.categories.subcategoryCount', { count: children(category.id).length }) }}</span></div><ul v-if="children(category.id).length"><li v-for="child in visibleChildren(category)" :key="child.id"><i>↳</i>{{ child.name }}</li></ul><p v-else class="no-children">{{ t('finance.categories.noSubcategories') }}</p></article></div><p v-else class="empty">{{ t('finance.categories.noMatches') }}</p></section>
+      <section class="panel"><h2>{{ t('finance.categories.addCategory') }}</h2><p class="muted">{{ t('finance.categories.parentHint') }}</p><form @submit.prevent="save"><label>{{ t('finance.categories.name') }}<el-input v-model.trim="form.name" required :placeholder="t('finance.categories.namePlaceholder')" /></label><label>{{ t('finance.categories.budgetSpace') }}<el-select v-model="form.budgetSpaceId" filterable @change="form.parentCategoryId=''"><el-option v-for="space in spaces" :key="space.id" :value="space.id" :label="space.name" /></el-select></label><label>{{ t('finance.categories.kind') }}<el-select v-model="form.appliesTo" @change="form.parentCategoryId=''"><el-option value="expense" :label="t('finance.categories.expense')" /><el-option value="income" :label="t('finance.categories.income')" /></el-select></label><label>{{ t('finance.categories.mainCategory') }}<el-select v-model="form.parentCategoryId" filterable><el-option value="" :label="t('finance.categories.noParent')" /><el-option v-for="category in parents" :key="category.id" :value="category.id" :label="category.name" /></el-select></label><el-button type="primary" native-type="submit" :loading="busy">{{ t('finance.categories.submit') }}</el-button></form></section>
     </div>
   </div>
 </template>

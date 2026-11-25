@@ -4,11 +4,13 @@ import { api, apiErrorMessage } from '@/api'
 import { localDateInputValue } from '@/date'
 import { t } from '@/i18n'
 import type { Account } from '@/types'
+import '@/locales/operationMessages'
 const emit = defineEmits<{ transferred: [] }>()
 
 const accounts = ref<Account[]>([])
 const done = ref('')
 const error = ref('')
+const refreshWarning = ref('')
 const busy = ref(false)
 const form = ref({ sourceAccountId: '', destinationAccountId: '', amount: 0, occurredOn: localDateInputValue(), description: '' })
 
@@ -19,13 +21,24 @@ async function load(): Promise<void> {
 }
 
 async function save(): Promise<void> {
+  if (busy.value) return
   error.value = ''
   done.value = ''
+  refreshWarning.value = ''
   if (form.value.sourceAccountId === form.value.destinationAccountId) { error.value = t('finance.transfer.sameAccounts'); return }
   if (!form.value.sourceAccountId || !form.value.destinationAccountId) { error.value = t('finance.transfer.missingAccounts'); return }
   if (!Number.isFinite(form.value.amount) || form.value.amount < 0.01) { error.value = t('finance.transfer.invalidAmount'); return }
   busy.value = true
-  try { await api.createTransfer(form.value); done.value = t('finance.transfer.created'); form.value.amount = 0; await load(); emit('transferred') } catch (caughtError: unknown) { error.value = apiErrorMessage(caughtError, t('finance.transfer.createError')) } finally { busy.value = false }
+  try { await api.createTransfer(form.value) } catch (caughtError: unknown) {
+    error.value = apiErrorMessage(caughtError, t('finance.transfer.createError'))
+    busy.value = false
+    return
+  }
+  done.value = t('finance.transfer.created')
+  form.value.amount = 0
+  emit('transferred')
+  try { await load() } catch { refreshWarning.value = t('operations.refreshFailed') }
+  finally { busy.value = false }
 }
 
 onMounted(() => { void load().catch(caughtError => { error.value = apiErrorMessage(caughtError, t('finance.transfer.loadError')) }) })
@@ -75,6 +88,7 @@ onMounted(() => { void load().catch(caughtError => { error.value = apiErrorMessa
 
         <label class="description-field"><span>{{ t('finance.transfer.description') }} <em>{{ t('finance.transfer.optional') }}</em></span><el-input v-model.trim="form.description" :placeholder="t('finance.transfer.descriptionPlaceholder')" /></label>
         <p v-if="error" class="notice">{{ error }}</p>
+        <p v-if="refreshWarning" class="notice" role="alert">{{ refreshWarning }}</p>
         <div class="transfer-actions">
           <el-button type="primary" native-type="submit" class="transfer-submit" :disabled="busy || accounts.length < 2">{{ busy ? t('finance.transfer.saving') : t('finance.transfer.submit') }}</el-button>
           <p v-if="done" class="success">{{ done }}</p>

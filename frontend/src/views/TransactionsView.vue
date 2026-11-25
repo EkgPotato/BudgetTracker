@@ -8,6 +8,8 @@ import { localDateInputValue } from '@/date'
 import { t } from '@/i18n'
 import { formatMoney } from '@/money'
 import type { TransactionKind } from '@/types'
+import { isDebit, operationLabel } from '@/operations'
+import '@/locales/operationMessages'
 
 const route = useRoute()
 const router = useRouter()
@@ -15,7 +17,9 @@ const isModalOpen = ref(false)
 const busy = ref(false)
 const error = ref('')
 const saved = ref('')
-const closeTimer = ref<number | undefined>()
+const pageError = ref('')
+const pageMessage = ref('')
+const loading = ref(false)
 const form = ref({ accountId: '', categoryId: '', kind: 'expense' as TransactionKind, amount: 0, occurredOn: localDateInputValue(), description: '' })
 
 const {
@@ -24,18 +28,46 @@ const {
   filters,
   datePreset,
   filteredItems,
+  total,
+  page,
+  pageSize,
   load,
+  loadPage: loadResults,
   applyPreset,
   resetFilters,
 } = useTransactions()
 
 const availableCategories = computed(() => categories.value.filter(category => category.appliesTo === form.value.kind))
+let initialized = false
+let resultsVersion = 0
 
 async function loadPage(): Promise<void> {
   await load()
   form.value.accountId ||= accounts.value[0]?.id ?? ''
   form.value.categoryId ||= availableCategories.value[0]?.id ?? ''
 }
+
+async function refreshPage(): Promise<void> {
+  loading.value = true
+  pageError.value = ''
+  try { await loadPage(); initialized = true } catch (caught: unknown) { pageError.value = apiErrorMessage(caught, t('finance.transactions.loadError')) }
+  finally { loading.value = false }
+}
+
+async function refreshResults(): Promise<void> {
+  const version = ++resultsVersion
+  loading.value = true
+  pageError.value = ''
+  try { await loadResults() } catch (caught: unknown) { if (version === resultsVersion) pageError.value = apiErrorMessage(caught, t('finance.transactions.loadError')) }
+  finally { if (version === resultsVersion) loading.value = false }
+}
+
+watch(filters, () => {
+  if (!initialized) return
+  if (page.value !== 1) page.value = 1
+  else void refreshResults()
+}, { deep: true, flush: 'post' })
+watch(page, () => { if (initialized) void refreshResults() })
 
 function openModal(): void {
   error.value = ''
@@ -48,6 +80,7 @@ function closeModal(): void {
 }
 
 async function save(): Promise<void> {
+  if (busy.value) return
   error.value = ''
   saved.value = ''
   if (!form.value.accountId || !form.value.categoryId) { error.value = t('finance.transactions.missingAccountOrCategory'); return }
@@ -56,16 +89,18 @@ async function save(): Promise<void> {
   busy.value = true
   try {
     await api.createTransaction(form.value)
-    form.value.amount = 0
-    form.value.description = ''
-    await loadPage()
-    saved.value = t('finance.transactions.saved')
-    closeTimer.value = window.setTimeout(() => { isModalOpen.value = false }, 650)
   } catch (caughtError: unknown) {
     error.value = apiErrorMessage(caughtError, t('finance.transactions.saveError'))
-  } finally {
     busy.value = false
+    return
   }
+  form.value.amount = 0
+  form.value.description = ''
+  isModalOpen.value = false
+  pageMessage.value = t('finance.transactions.saved')
+  await refreshPage()
+  if (pageError.value) pageMessage.value = t('operations.refreshFailed')
+  busy.value = false
 }
 
 watch(() => route.query.add, value => {
@@ -76,12 +111,11 @@ onMounted(() => {
   applyPreset()
   window.addEventListener('grosik:open-transaction', openModal)
   if (route.query.add === '1') { openModal(); void router.replace('/transakcje') }
-  void loadPage().catch(caughtError => { error.value = apiErrorMessage(caughtError, t('finance.transactions.loadError')) })
+  void refreshPage()
 })
 
 onBeforeUnmount(() => {
   window.removeEventListener('grosik:open-transaction', openModal)
-  if (closeTimer.value) window.clearTimeout(closeTimer.value)
 })
 </script>
 
@@ -90,6 +124,9 @@ onBeforeUnmount(() => {
     <section class="transaction-hero">
       <div><p class="section-kicker">{{ t('finance.transactions.kicker') }}</p><h2>{{ t('finance.transactions.title') }}</h2><p>{{ t('finance.transactions.subtitle') }}</p></div>
     </section>
+
+    <p v-if="pageMessage" class="success" role="status">{{ pageMessage }}</p>
+    <div v-if="pageError" class="notice" role="alert">{{ pageError }} <el-button @click="refreshPage">{{ t('operations.retry') }}</el-button></div>
 
     <TransactionFilters
       :accounts="accounts"
@@ -102,14 +139,16 @@ onBeforeUnmount(() => {
     />
 
     <section class="panel transaction-list">
-      <div class="panel-head"><div><p class="section-kicker">{{ t('finance.transactions.historyKicker') }}</p><h3>{{ t('finance.transactions.listTitle') }}</h3></div><span class="count-badge">{{ t('finance.transactions.count', { count: filteredItems.length }) }}</span></div>
-      <el-table :data="filteredItems" :empty-text="t('finance.transactions.empty')" style="width:100%">
-        <el-table-column :label="t('finance.transactions.description')" min-width="180"><template #default="{ row }">{{ row.description || t('finance.transactions.noDescription') }}</template></el-table-column>
+      <div class="panel-head"><div><p class="section-kicker">{{ t('finance.transactions.historyKicker') }}</p><h3>{{ t('finance.transactions.listTitle') }}</h3></div><span class="count-badge">{{ t('finance.transactions.count', { count: total }) }}</span></div>
+      <el-table v-loading="loading" :data="filteredItems" :empty-text="pageError ? t('finance.transactions.loadError') : t('finance.transactions.empty')" style="width:100%">
+        <el-table-column :label="t('finance.transactions.description')" min-width="180"><template #default="{ row }">{{ row.description || operationLabel(row.kind) }}</template></el-table-column>
+        <el-table-column :label="t('finance.transactions.kind')" min-width="160"><template #default="{ row }">{{ operationLabel(row.kind) }}</template></el-table-column>
         <el-table-column :label="t('finance.transactions.category')" min-width="150"><template #default="{ row }">{{ row.categoryName || t('finance.transactions.noCategory') }}</template></el-table-column>
         <el-table-column prop="accountName" :label="t('finance.transactions.account')" min-width="150" />
         <el-table-column prop="occurredOn" :label="t('finance.transactions.date')" min-width="120" />
-        <el-table-column :label="t('finance.transactions.amount')" min-width="130" align="right"><template #default="{ row }"><strong :class="row.kind === 'expense' ? 'expense' : 'income'">{{ row.kind === 'expense' ? '−' : '+' }}{{ formatMoney(row.amount) }}</strong></template></el-table-column>
+        <el-table-column :label="t('finance.transactions.amount')" min-width="130" align="right"><template #default="{ row }"><strong :class="isDebit(row.kind) ? 'expense' : 'income'">{{ isDebit(row.kind) ? '−' : '+' }}{{ formatMoney(row.amount) }}</strong></template></el-table-column>
       </el-table>
+      <el-pagination v-if="total > pageSize" v-model:current-page="page" :page-size="pageSize" :total="total" layout="prev, pager, next" />
     </section>
   </div>
 
@@ -132,6 +171,6 @@ onBeforeUnmount(() => {
 </style>
 
 <style scoped>
-.transaction-modal{width:100%;max-height:none;overflow:visible;padding:0;border-radius:0;box-shadow:none}
+.transaction-modal{width:100%;max-height:none;overflow:visible;padding:0;border-radius:0;box-shadow:none;background:transparent}
 .transaction-modal form{margin-top:0}
 </style>

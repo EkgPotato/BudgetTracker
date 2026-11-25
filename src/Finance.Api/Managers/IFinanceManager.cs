@@ -11,6 +11,7 @@ public interface IFinanceManager
     Task<IReadOnlyList<CategoryResponse>> GetCategoriesAsync(string ownerId, CancellationToken cancellationToken);
     Task<CategoryResponse?> CreateCategoryAsync(string ownerId, CategoryRequest request, CancellationToken cancellationToken);
     Task<IReadOnlyList<TransactionResponse>> GetTransactionsAsync(string ownerId, CancellationToken cancellationToken);
+    Task<TransactionPageResponse> GetTransactionPageAsync(string ownerId, TransactionPageQuery query, CancellationToken cancellationToken);
     Task<TransactionResponse?> CreateTransactionAsync(string ownerId, TransactionRequest request, CancellationToken cancellationToken);
     Task<TransferResponse?> CreateTransferAsync(string ownerId, TransferRequest request, CancellationToken cancellationToken);
     Task<DashboardResponse> DashboardAsync(string ownerId, CancellationToken cancellationToken);
