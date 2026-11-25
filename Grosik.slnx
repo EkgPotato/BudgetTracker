@@ -1,10 +1,11 @@
 <Solution>
-  <Folder Name="/src/">
-    <Project Path="src/Grosik.Api/Grosik.Api.csproj" />
-    <Project Path="src/Grosik.Data/Grosik.Data.csproj" />
-    <Project Path="src/Grosik.Services/Grosik.Services.csproj" />
-  </Folder>
-  <Folder Name="/tests/">
-    <Project Path="tests/Grosik.Tests/Grosik.Tests.csproj" />
-  </Folder>
+    <Folder Name="/src/">
+        <Project Path="src/Finance.Api/Finance.Api.csproj"/>
+        <Project Path="src/Finance.Domain/Finance.Domain.csproj"/>
+        <Project Path="src/Finance.Infrastructure/Finance.Infrastructure.csproj"/>
+        <Project Path="src/Finance.Localization/Finance.Localization.csproj"/>
+    </Folder>
+    <Folder Name="/tests/">
+        <Project Path="tests/Finance.Tests/Finance.Tests.csproj"/>
+    </Folder>
 </Solution>

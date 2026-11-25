@@ -15,7 +15,7 @@
     "jsx": "preserve",
     "isolatedModules": true,
     "esModuleInterop": true
-    ,"types": ["vite/client"]
+    ,"types": ["vite/client", "vitest/globals"]
     ,"baseUrl": "."
     ,"ignoreDeprecations": "6.0"
     ,"paths": { "@/*": ["src/*"] }

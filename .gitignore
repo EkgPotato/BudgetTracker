@@ -18,7 +18,12 @@ appsettings.Development.json
 .vs/
 .idea/
 
+.agents/
+CODE_REVIEW_*.md
+
 # Personal financial source data
 *.xlsx
 *.xls
 *.csv
+.env
+.certs/

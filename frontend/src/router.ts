@@ -7,6 +7,7 @@ import TransferView from './views/TransferView.vue'
 import ReportsView from './views/ReportsView.vue'
 import AuthView from './views/AuthView.vue'
 import OnboardingView from './views/OnboardingView.vue'
+import ProfileView from './views/ProfileView.vue'
 import { session } from './api'
 
 export const router = createRouter({
@@ -19,7 +20,8 @@ export const router = createRouter({
     { path: '/transfery', component: TransferView, meta: { title: 'Transfer środków' } },
     { path: '/konta', component: AccountsView, meta: { title: 'Konta' } },
     { path: '/kategorie', component: CategoriesView, meta: { title: 'Kategorie' } },
-    { path: '/raporty', component: ReportsView, meta: { title: 'Raporty' } }
+    { path: '/raporty', component: ReportsView, meta: { title: 'Raporty' } },
+    { path: '/profil', component: ProfileView, meta: { title: 'Mój profil' } }
   ]
 })
 router.beforeEach((to) => {

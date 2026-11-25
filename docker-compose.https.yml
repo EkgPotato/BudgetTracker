@@ -1,0 +1,14 @@
+# Optional local HTTPS override. First create a certificate:
+# dotnet dev-certs https -ep .certs/finance-api.pfx -p <password>
+# Then set FINANCE_HTTPS_CERT_PASSWORD in .env and run:
+# docker compose -f docker-compose.yml -f docker-compose.https.yml up --build
+services:
+  api:
+    environment:
+      ASPNETCORE_URLS: http://+:8080;https://+:8443
+      ASPNETCORE_Kestrel__Certificates__Default__Path: /https/finance-api.pfx
+      ASPNETCORE_Kestrel__Certificates__Default__Password: ${FINANCE_HTTPS_CERT_PASSWORD:?Set FINANCE_HTTPS_CERT_PASSWORD in .env}
+    volumes:
+      - ./.certs:/https:ro
+    ports:
+      - "${FINANCE_API_HTTPS_PORT:-7180}:8443"
